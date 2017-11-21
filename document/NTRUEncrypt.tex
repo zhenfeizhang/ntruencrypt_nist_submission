@@ -1,0 +1,663 @@
+%\documentclass[10pt]{acmlarge}
+%\documentclass[10pt, onepage]{IEEEtran}
+%\documentclass[10pt]{llncs}
+\documentclass{llncs}
+\usepackage{amssymb,amscd,amsmath,url}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{bytefield}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\renewcommand{\qed}{\hfill\blacksquare}
+%\allowdisplaybreaks
+
+% Theorem environments
+
+%\newtheorem{theorem}{Theorem}
+%\newtheorem{lemma}[theorem]{Lemma}
+%\newtheorem{conjecture}[theorem]{Conjecture}
+%\newtheorem{question}[theorem]{Question}
+%\newtheorem{proposition}[theorem]{Proposition}
+%\newtheorem{corollary}[theorem]{Corollary}
+
+%\theoremstyle{definition}
+% The * surpresses numbering
+%\newtheorem*{definition}{Definition}
+\newtheorem{heuristic}{Heuristic}
+\newtheorem{assumption}{Assumption}
+
+%\theoremstyle{remark}
+%\newtheorem{remark}[theorem]{Remark}
+%\newtheorem*{acknowledgement}{Acknowledgements}
+
+%\newcommand\claim[2]{\par\vspace{1ex minus 0.5ex}\noindent%
+%\textbf{Claim #1}.\enspace\emph{#2}.\par\noindent\ignorespaces}
+
+%\numberwithin{equation}{section}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%% Set Up Environment for Parts in Theorems %%%%%%%%%%%%%%
+\newenvironment{parts}[0]{%
+  \begin{list}{}%
+    {\setlength{\itemindent}{0pt}
+     \setlength{\labelwidth}{1.5\parindent}
+     \setlength{\labelsep}{.5\parindent}
+     \setlength{\leftmargin}{2\parindent}
+     \setlength{\itemsep}{0pt}
+     }%
+   }%
+  {\end{list}}
+% Use \Part{(a)}, instead of \item[(a)], to ensure upright font
+\newcommand{\Part}[1]{\item[\upshape#1]}
+
+%%%%%%%%%%%%%%%%%%
+% Greek Alphabet %
+%%%%%%%%%%%%%%%%%%
+\renewcommand{\a}{\alpha}
+\renewcommand{\b}{\beta}
+\newcommand{\g}{\gamma}
+\renewcommand{\d}{\delta}
+\newcommand{\e}{\epsilon}
+\newcommand{\f}{\phi}
+\renewcommand{\l}{\lambda}
+\renewcommand{\k}{\kappa}
+\newcommand{\lhat}{\hat\lambda}
+\newcommand{\m}{\mu}
+\newcommand{\bfmu}{{\boldsymbol{\mu}}}
+\renewcommand{\o}{\omega}
+\renewcommand{\r}{\rho}
+\newcommand{\rbar}{{\bar\rho}}
+\newcommand{\s}{\sigma}
+\newcommand{\sbar}{{\bar\sigma}}
+\renewcommand{\t}{\tau}
+\newcommand{\z}{\zeta}
+
+\newcommand{\D}{\Delta}
+\newcommand{\G}{\Gamma}
+\newcommand{\F}{\Phi}
+
+%%%%%%%%%%%%%%%%%%%%
+% Fraktur Alphabet %
+%%%%%%%%%%%%%%%%%%%%
+\newcommand{\ga}{{\mathfrak{a}}}
+\newcommand{\gb}{{\mathfrak{b}}}
+\newcommand{\gn}{{\mathfrak{n}}}
+\newcommand{\gp}{{\mathfrak{p}}}
+\newcommand{\gP}{{\mathfrak{P}}}
+\newcommand{\gq}{{\mathfrak{q}}}
+
+%%%%%%%%%%%%%%%%%%%
+% Barred Alphabet %
+%%%%%%%%%%%%%%%%%%%
+\newcommand{\Abar}{{\bar A}}
+\newcommand{\Ebar}{{\bar E}}
+\newcommand{\Pbar}{{\bar P}}
+\newcommand{\Sbar}{{\bar S}}
+\newcommand{\Tbar}{{\bar T}}
+\newcommand{\ybar}{{\bar y}}
+\newcommand{\phibar}{{\bar\phi}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+% Calligraphic Alphabet %
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\Acal}{{\mathcal A}}
+\newcommand{\Bcal}{{\mathcal B}}
+\newcommand{\Ccal}{{\mathcal C}}
+\newcommand{\Dcal}{{\mathcal D}}
+\newcommand{\Ecal}{{\mathcal E}}
+\newcommand{\Fcal}{{\mathcal F}}
+\newcommand{\Gcal}{{\mathcal G}}
+\newcommand{\Hcal}{{\mathcal H}}
+\newcommand{\Ical}{{\mathcal I}}
+\newcommand{\Jcal}{{\mathcal J}}
+\newcommand{\Kcal}{{\mathcal K}}
+\newcommand{\Lcal}{{\mathcal L}}
+\newcommand{\Mcal}{{\mathcal M}}
+\newcommand{\Ncal}{{\mathcal N}}
+\newcommand{\Ocal}{{\mathcal O}}
+\newcommand{\Pcal}{{\mathcal P}}
+\newcommand{\Qcal}{{\mathcal Q}}
+\newcommand{\Rcal}{{\mathcal R}}
+\newcommand{\Scal}{{\mathcal S}}
+\newcommand{\Tcal}{{\mathcal T}}
+\newcommand{\Ucal}{{\mathcal U}}
+\newcommand{\Vcal}{{\mathcal V}}
+\newcommand{\Wcal}{{\mathcal W}}
+\newcommand{\Xcal}{{\mathcal X}}
+\newcommand{\Ycal}{{\mathcal Y}}
+\newcommand{\Zcal}{{\mathcal Z}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Blackboard Bold Alphabet %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\renewcommand{\AA}{\mathbb{A}}
+\newcommand{\BB}{\mathbb{B}}
+\newcommand{\CC}{\mathbb{C}}
+\newcommand{\FF}{\mathbb{F}}
+\newcommand{\GG}{\mathbb{G}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\ZZ}{\mathbb{Z}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Boldface Math Alphabet %
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\bfa}{{\bf a}}
+\newcommand{\bfb}{{\bf b}}
+\newcommand{\bfc}{{\bf c}}
+\newcommand{\bfe}{{\bf e}}
+\newcommand{\bfep}{{\bf \epsilon}}
+\newcommand{\bff}{{\bf f}}
+\newcommand{\bfg}{{\bf g}}
+\newcommand{\bfh}{{\bf h}}
+\newcommand{\bfm}{{\bf m}}
+\newcommand{\bfn}{{\bf n}}
+\newcommand{\bfp}{{\bf p}}
+\newcommand{\bfr}{{\bf r}}
+\newcommand{\bfs}{{\bf s}}
+\newcommand{\bft}{{\bf t}}
+\newcommand{\bfu}{{\bf u}}
+\newcommand{\bfv}{{\bf v}}
+\newcommand{\bfw}{{\bf w}}
+\newcommand{\bfW}{{\bf W}}
+\newcommand{\bfx}{{\bf x}}
+\newcommand{\bfy}{{\bf y}}
+\newcommand{\bfz}{{\bf z}}
+\newcommand{\bfA}{{\bf A}}
+\newcommand{\bfF}{{\bf F}}
+\newcommand{\bfB}{{\bf B}}
+\newcommand{\bfC}{{\bf C}}
+\newcommand{\bfG}{{\bf G}}
+\newcommand{\bfH}{{\bf H}}
+\newcommand{\bfI}{{\bf I}}
+\newcommand{\bfM}{{\bf M}}
+\newcommand{\bfP}{{\bf P}}
+\newcommand{\bfS}{{\bf S}}
+\newcommand{\bfT}{{\bf T}}
+\newcommand{\bfzero}{{\bf{0}}}
+\newcommand{\bfU}{{\bf U}}
+\newcommand{\bfV}{{\bf V}}
+\newcommand{\pqntrusign}{{\sf{pqNTRUSign}}}
+\newcommand{\ntru}{{\sf{NTRU}}}
+\newcommand{\ntrukem}{{\sf{ntru-kem}}}
+\newcommand{\ntrupke}{{\sf{ntru-pke}}}
+\newcommand{\ssntrukem}{{\sf{ss-ntru-kem}}}
+\newcommand{\ssntrupke}{{\sf{ss-ntru-pke}}}
+\newcommand{\NTRUEncrypt}{{\sf{NTRU}}}
+\newcommand{\encap}{{\textsc{Encap}}}
+\newcommand{\decap}{{\textsc{Decap}}}
+\newcommand{\encrypt}{{\textsc{Encrypt}}}
+\newcommand{\decrypt}{{\textsc{Decrypt}}}
+\newcommand{\keygen}{{\textsc{KeyGen}}}
+\newcommand{\hash}{{\textsc{Hash}}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Miscellaneous New Commands %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\Aut}{\operatorname{Aut}}
+\newcommand{\Disc}{\operatorname{Disc}}
+\newcommand{\Div}{\operatorname{Div}}
+\newcommand{\End}{\operatorname{End}}
+\newcommand{\Gal}{\operatorname{Gal}}
+\newcommand{\GL}{\operatorname{GL}}
+\newcommand{\Index}{\operatorname{Index}}
+\newcommand{\Image}{\operatorname{Image}}
+\newcommand{\LCM}{\operatorname{LCM}}
+\newcommand{\Lift}{\operatorname{Lift}}
+\newcommand{\liftable}{{\textup{liftable}}}
+\newcommand{\LS}[2]{{\genfrac{(}{)}{}{}{#1}{#2}}} % Legendre symbol
+\newcommand{\tLS}[2]{(#1{}|{}#2)} % Legendre symbol in text (a|b)
+\newcommand{\hhat}{{\hat h}}
+\newcommand{\Ker}{{\operatorname{ker}}}
+\newcommand{\MOD}[1]{~(\textup{mod}~#1)}
+\newcommand{\Norm}{{\operatorname{\mathsf{N}}}}
+\newcommand{\notdivide}{\nmid}
+\newcommand{\normalsubgroup}{\triangleleft}
+\newcommand{\odd}{{\operatorname{odd}}}
+\newcommand{\onto}{\twoheadrightarrow}
+\newcommand{\ord}{\operatorname{ord}}
+\newcommand{\Pic}{\operatorname{Pic}}
+\newcommand{\Prob}{\operatorname{Prob}}
+\newcommand{\Qbar}{{\bar{\QQ}}}
+\newcommand{\rank}{\operatorname{rank}}
+\newcommand{\Resultant}{\operatorname{Resultant}}
+\renewcommand{\setminus}{\smallsetminus}
+\newcommand{\Span}{\operatorname{Span}}
+\newcommand{\Spec}{\operatorname{Spec}}
+\newcommand{\tors}{{\textup{tors}}}
+\newcommand{\Trace}{\operatorname{Trace}}
+\newcommand{\UHP}{{\mathfrak{h}}}    % Upper half plane
+\newcommand{\<}{\langle}
+\renewcommand{\>}{\rangle}
+
+\newcommand{\longhookrightarrow}{\lhook\joinrel\longrightarrow}
+\newcommand{\longonto}{\relbar\joinrel\twoheadrightarrow}
+\newcommand{\bens}{\begin{eqnarray}}
+\newcommand{\eens}{\end{eqnarray}}
+
+\newcommand*{\defeq}{\mathrel{\vcenter{\baselineskip0.5ex \lineskiplimit0pt
+                     \hbox{\scriptsize.}\hbox{\scriptsize.}}}%
+                     =}
+                     
+\newcommand{\LINEFOR}[2]{%
+    \STATE\algorithmicfor\ {#1}\ \algorithmicdo\ {#2} \algorithmicend\ \algorithmicfor%
+}                     
+\newcommand{\LineIf}[2]{ \STATE \algorithmicif\ {#1}\ \algorithmicthen\ {#2} \algorithmicend\ \algorithmicif }
+\newcommand{\pluseq}{\mathrel{+}=}        
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\begin{document}
+
+
+\title{
+	NIST PQ Submission: NTRUEncrypt\\
+	A lattice based encryption algorithm
+}
+
+\author{Cong Chen \inst{2} \and Jeffrey Hoffstein \inst{1}  \and William Whyte \inst{2} \and Zhenfei Zhang \inst{2} 
+}
+\institute{Brown University, Providence RI, USA,\ \email{jhoff@math.brown.edu} \and 
+OnBoard Security, Wilmington MA, USA,\ \email{\{cchen,wwhyte,zzhang\}@onboardsecurity.com}
+}
+\date{\today}
+\maketitle
+%\maketitle
+%\begin{abstract}
+
+
+%\end{abstract}
+
+%\clearpage
+
+%\tableofcontents
+
+%\clearpage
+
+\section{Cover Sheet}
+This is an overview document of \ntru~lattice-based cryptosystem for the submission of NIST post-quantum cryptography call for 
+standardization.
+The submitted cryptosystem consists of : 
+
+\begin{itemize}
+\item \ntrukem: a CPA secure key encapsulation scheme (KEM) based on the original NTRUEncrypt algorithm by Hoffstein, Pipher and Silverman \cite{DBLP:conf/ants/HoffsteinPS98} with parameter sets derived from a recent revision \cite{DBLP:conf/ctrsa/HoffsteinPSSWZ17};
+
+\item \ntrupke: a public key encryption (PKE) scheme based on the above NTRUEncrypt algorithm that achieves CCA-2 security via NAEP transformation \cite{DBLP:journals/iacr/Howgrave-GrahamSSW03};
+
+\item \ssntrukem: a key encapsulation scheme based on the original NTRUEncrypt algorithm with parameter sets derived from the Stehle-Sternfield ``provable secure" NTRU \cite{DBLP:conf/eurocrypt/StehleS11};
+
+\item \ssntrupke: a public key encryption scheme based on the above provable secure NTRUEncrypt algorithm that achieves CCA-2 security via NAEP transformation \cite{DBLP:journals/iacr/Howgrave-GrahamSSW03}.
+\end{itemize}
+
+\noindent
+This documents addresses the following  requirements:
+
+\begin{itemize}
+\item {\bf Specifications}
+\item {\bf Performance analysis}
+\item {\bf A statement of the advantages and limitations}
+\item {\bf Cover sheet}
+\item {\bf Reference implementation}
+\item {\bf Security analysis}
+\item {\bf Statement of IPR}
+\end{itemize}
+
+\noindent
+Submission information:
+\begin{itemize}
+\item {\bf Principal submitter:} Zhenfei Zhang, zzhang@onboardsecurity.com, Onboard Security, 187 Ballardvale St. Suite A202, Wilmington, MA, 01887, U.S.
+\item {\bf Auxiliary submitters:}
+Chen Cong, Jeffrey Hoffstein and William Whyte.
+\item {\bf 
+Inventors of the cryptosystem:} Jeffrey Hoffstein,
+               Jill Pipher,
+               John M. Schanck,
+               Joseph H. Silverman,
+               William Whyte and
+               Zhenfei Zhang.
+\item {\bf Name of the owner of the cryptosystem:} 
+Onboard Security Inc.      
+
+\item {\bf Backup point of contact:} William Whyte, wwhyte@onboardsecurity.com, Onboard Security, 187 Ballardvale St. Suite A202, Wilmington, MA, 01887, U.S.
+     
+\end{itemize}
+
+
+\section{Algorithm Specifications}
+\subsection{Notation}
+
+We use lower case bold letters for vectors, upper case bold letters for matrices.
+For a polynomial $f(x) = f_0+f_1x+\dots+ f_{n-1}x^{n-1}$, 
+we denote its vector form by $\bff \defeq \left<f_0, f_1, \dots, f_{n-1}\right>$.  We sometimes abuse the notation of vector and polynomial when there is no ambiguity.
+For a polynomial/vector $\bff$, the norms are $\|\bff\| \defeq \sqrt{\sum_{i=0}^{n-1}f_i^2}$ and $\|\bff\|_\infty \defeq \max(|f_i|)$. 
+
+We often use the polynomial rings $\Rcal_q \defeq \ZZ[x]/F(x)$ with $F(x) = x^n\pm 1$. %When
+%an element of $\ZZ_q$ is lifted to $\ZZ$, or reduced modulo $q$, it is identified with its
+%unique representative in $[-q/2,q/2)\cap \ZZ$.
+A cyclic rotated matrix of a polynomial $f(x)$ over the ring $\Rcal_q$
+is a matrix $\bfM = (\bff_1,\bff_2,\dots,\bff_n)^T$ with $\bff_i = f(x)x^{i-1}\bmod F(x)$.
+If  $F(x) = x^n- 1$ it is literally cyclic, and close to cyclic, up to signs, if $F(x) = x^n + 1$.
+
+For a real $a$, we let 
+$\lfloor a\rceil$ denote the closet integer to $a$.
+ For an integer $a$, we use
+$[a]_q$ to denote $a\bmod q$; $\lfloor a\rfloor_p \defeq (a - [a]_p )/p$ for the operation of rounding $a$ to the closest multiple of $p$. 
+Modular operations are center lifted, for example $a\bmod q$ returns an integer within $-q/2$ and $q/2$. These notations are also extended to vectors and matrices.
+
+%In the following we will present the scheme over a polynomial ring $\Rcal_q = \ZZ_q[x]/(x^N - 1)$.
+%Our scheme also works over other rings, such as $\ZZ_q[x]/(x^N + 1)$ with minor modification.
+
+
+
+
+We set the notation:
+\begin{align*}
+  \Tcal_N&=\left\{\text{trinary polynomials}\right\}\\
+  \Tcal_N(d,e)&=\left\{
+        \begin{tabular}{l}
+        trinary polynomials with exactly\\ 
+        $d$ ones and $e$ minus ones\\
+        \end{tabular}
+      \right\}
+\end{align*}
+If~$N$ is fixed we will write~$\Tcal$ and $\Tcal(d,e)$ instead.
+
+%\subsection{The scheme}
+\subsection{\ntru~lattice}
+Let $f(x)$, $g(x)$ and $h(x)$ be $3$ polynomials in $\Rcal_q$,
+where $f(x)$ and $g(x)$ have very small coefficients; $h(x) = p^{-1}g(x)f^{-1}(x)$.  We express by
+$\bff$, $\bfg$  and  $\bfh$ the vector form of the polynomials. Also let $\bfF$, $\bfG$ and  $\bfH$ be the matrix  obtained from 
+nega-cyclic rotations.
+The NTRU lattice with regard to $h$ is defined as 
+\[
+\Lcal_h = \{(u,v) \in \Rcal_q^2: uh = v\}
+\]
+or rather, the vector/matrix form:
+\[
+\Lcal_h = \{(\bfu,\bfv): \bfu\bfH = \bfv \bmod q\}
+\]
+where there exists a public basis
+$\bf P  = \begin{bmatrix}
+0& q\bfI_N \\
+\bfI_N& \bfH 
+\end{bmatrix}
+$
+and a secret generator
+$
+[p\bfF|\bfG]
+$. %We also require $g(x)$ to be invertible over $\Rcal_p$,
+%which is the same as  $\bfG$ being invertible mod $p$.
+
+\subsection{Auxiliary functions}
+Let us firstly define some auxiliary functions. Those functions are building blocks for our algorithm.
+We give a generic description for those functions.
+Implementer may choose to use better (more secure
+or more efficient) instantiations when and if they
+are available.
+
+\paragraph{Hash function.} Through out the paper
+we will use \hash~to denote a cryptographic secure hash function that takes arbitrary input length and
+outputs a binary string with arbitrary length. In
+our submission, we use \textsf{SHA3-512} for such
+instantiation.
+
+
+\paragraph{Trinary Polynomial Generation function.}
+
+\paragraph{Discrete Gaussian sampler (DGS).} Input a
+dimension $N$ and a standard deviation $\sigma$ it outputs a discrete Gaussian distributed vector.
+
+\paragraph{Deterministic Discrete Gaussian sampler (DDGS).}Input a
+dimension $N$, a standard deviation $\sigma$ and
+a seed $s$, it deterministically outputs a discrete Gaussian distributed vector.
+\subsection{The \ntrukem~algorithms}
+
+In an \ntru~cryptosystem, $\bff$ (and $\bfg$, if
+required) are 
+the private keys, while $\bfh$ is the public key.
+Those keys can be generated via algorithm
+%The key generation algorithm is shown in Algorithm 
+\ref{alg:keygen}.
+Note that we use the classical \ntru~flat form (non-product form, cf. \cite{DBLP:journals/iacr/HoffsteinPSSWZ15}) keys 
+with a pre-fixed number of $+1$s and $-1$s.
+
+\begin{algorithm}
+\caption{{\ntrukem}.\keygen}
+\begin{algorithmic}[1]\label{alg:keygen}
+\REQUIRE Parameters $N$, $p$, $q$, $d$
+\ENSURE Public key $\bfh$ and secret key $(p\bff,\bfg)$
+\STATE $\bff \gets T(d+1,d)$  
+\LineIf {$\bff$ is not invertible mod $q$} {go to step 1}
+\STATE $\bfg \gets T(d+1,d)$
+\LineIf {$\bfg$ is not invertible mod $p$} {go to step 3}
+\STATE $\bfh = \bfg/(p\bff+1) \bmod q$
+\RETURN $\bfh$, $\bfg$ and $\bff$
+\end{algorithmic}
+\end{algorithm}
+
+We recommend that \ntrukem~to be used for ephemeral
+key establishments via the following algorithms.
+\begin{algorithm}%[H]
+\caption{\ntrukem.\encap}
+\begin{algorithmic}[1]
+\label{alg:encrypt}
+\REQUIRE Public key $\bfh$, message $msg$ of length $mlen$, and a parameter set
+  
+  \STATE $\bfm = \text{Pad}(msg)$ 
+  \STATE $\bfr \gets T(d+1,d)$
+  \STATE $\bfc = p\cdot \bfr*\bfh + \bfm$
+\ENSURE A ciphertext $\bfc$
+\end{algorithmic}
+\end{algorithm}
+
+Here the padding algorithm works as follows:
+\begin{itemize}
+\item Convert $msg$ into a bit string. This forms the binary coefficients for lower part of polynomial $m$.
+\item The last $167$ coefficients of $m(x)$ are 
+randomly chosen from $\{-1,0,1\}$. This gives over 
+$256$ bits entropy.
+\item The length of $msg$ is converted into an $8$ bit binary string, and forms the last $173$ to $168$ coefficients of $m$.    
+\end{itemize}
+
+
+\begin{algorithm}%[H]
+\caption{\ntrukem.\decap}
+\begin{algorithmic}[1]
+\label{alg:encrypt}
+\REQUIRE Secret key $f$ and a parameter set
+  
+  \STATE $\bfm = (p\cdot \bfc*\bff) \bmod p$ 
+  \STATE $msg = \text{Extract}(\bfm)$
+\ENSURE A message $msg$
+\end{algorithmic}
+\end{algorithm}
+The extract operation is the inverse of Pad so we omit the details. It
+outputs a message $m$ and its length $mlen$.
+
+We remark that when used in an KEM mode, one should 
+use both $m$ and $pk$ to 
+derive the session key, i.e. $\textsf{KDF}(m, pk, \dots)$. Also the responder needs to pick an $m$ 
+that has sufficient entropy for the given security
+level. In our implementation we require $32$ bytes
+for $m$, regardless of security level. 
+ 
+
+\subsection{The \ntrupke~algorithms}
+\ntrupke~uses a same key generation algorithm as 
+\ntrukem. Here we present the encryption and 
+decryption algorithms.
+\begin{algorithm}%[H]
+\caption{\ntrupke.\encrypt}
+\begin{algorithmic}[1]
+\label{alg:encrypt}
+\REQUIRE Public key $\bfh$, message $msg$ of length $mlen$, and a parameter set
+\STATE $\bfm = \text{Pad}(msg)$
+  \STATE $\bfr = \text{hash}(\bfm|\bfh)$
+  \STATE $\bft = \bfr*\bfh$
+  \STATE $\bfm_{mask} = \text{hash}(\bft)$
+  \STATE $\bfm' = \bfm - \bfm_{mask} \pmod{p}$
+  \STATE $\bfc = \bft + \bfm'$
+\ENSURE Ciphertext $\bfc$
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\begin{algorithm}%[H]
+\caption{\ntrupke.\decrypt}
+\begin{algorithmic}[1]
+\label{alg:decrypt}
+\REQUIRE Secret key $f$, public key $h$, ciphertext $c$, and a parameter.
+  \STATE $\bfm' = \bff*\bfc \pmod{p}$
+  \STATE $\bft = \bfc - \bfm$
+  \STATE $\bfm_{mask} = \text{hash}(\bft)$
+  \STATE $\bfm  = \bfm' + \bfm_{mask} \pmod{p}$
+  \STATE $\bfr = hash(\bfm|\bfh)$
+  \STATE $msg = \text{Extract}(\bfm)$
+  \IF{$p\cdot \bfr*\bfh = \bft$}
+  \STATE $result = msg$
+  \ELSE
+  \STATE $result = \bot$
+  \ENDIF
+  \ENSURE $result$
+\end{algorithmic}
+\end{algorithm}
+\subsection{The \ssntrukem~algorithms}
+
+\begin{algorithm}
+\caption{{\ssntrukem}.\keygen}
+\begin{algorithmic}[1]\label{alg:keygen}
+\REQUIRE Parameters $N$, $p$, $q$, $\sigma$
+\ENSURE Public key $\bfh$ and secret key $(p\bff,\bfg)$
+\STATE $\bff \gets \chi_\sigma^N$; $\bfg\gets \chi_\sigma^N$  
+%\LineIf {$\bff$ is not invertible mod $q$} {go to step 1}
+%\STATE $\bfg \gets T(d+1,d)$
+%\LineIf {$\bfg$ is not invertible mod $p$} {go to step 3}
+\STATE $\bfh = \bfg/(p\bff+1) \bmod q$
+\RETURN $\bfh$, $\bfg$ and $\bff$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}%[H]
+\caption{\ssntrukem.\encap}
+\begin{algorithmic}[1]
+\label{alg:encrypt}
+\REQUIRE Public key $h$, message $msg$ of length $mlen$, and a parameter set
+  
+  \STATE $m = \text{Pad}(msg)$ 
+  \STATE $\bfr \gets \chi_\sigma^N$; $\bfe\gets \chi_\sigma^N$ 
+
+  \STATE $\bfc = p\cdot \bfr*\bfh + p\cdot \bfe + \bfm$
+\ENSURE Ciphertext $\bfc$
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}%[H]
+\caption{\ssntrukem.\decap}
+\begin{algorithmic}[1]
+\label{alg:encrypt}
+\REQUIRE Secret key $f$ and a parameter set
+  
+  \STATE $\bfm = (p\cdot \bfc*\bff) \bmod p$ 
+  \STATE $msg = \text{Extract}(\bfm)$
+\ENSURE Ciphertext $c$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{The \ssntrupke algorithms}
+\ssntrupke~uses a same key generation algorithm as 
+\ntrukem. Here we present the encryption and 
+decryption algorithms.
+\begin{algorithm}%[H]
+\caption{\ssntrupke.\encrypt}
+\begin{algorithmic}[1]
+\label{alg:encrypt}
+\REQUIRE Public key $\bfh$, message $msg$ of length $mlen$, and a parameter set
+\STATE $\bfm = \text{Pad}(msg)$
+  \STATE $\bfr = \text{DDGS}(\bfm|\bfh)$
+  \STATE $\bfe = \text{DGS}$
+  \STATE $\bft = p\cdot\bfr*\bfh$
+  \STATE $\bfm_{mask} = \text{hash}((\bft\bmod p))$
+  \STATE $\bfm' = \bfm - \bfm_{mask} \pmod{p}$
+  \STATE $\bfc = \bft + p\cdot \bfe + \bfm'$
+\ENSURE Ciphertext $\bfc$
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\begin{algorithm}%[H]
+\caption{\ssntrupke.\decrypt}
+\begin{algorithmic}[1]
+\label{alg:decrypt}
+\REQUIRE Secret key $f$, public key $h$, ciphertext $c$, and a parameter.
+  \STATE $\bfm' = \bff*\bfc \pmod{p}$
+  \STATE $\bft = \bfc - \bfm$
+  \STATE $\bfm_{mask} = \text{hash}((\bft \bmod p))$
+  \STATE $\bfm  = \bfm' + \bfm_{mask} \pmod{p}$
+  \STATE $\bfr = \text{DDGS}(\bfm|\bfh)$
+  \STATE $\bfe = p^{-1}(\bft - \bfr*\bfh)$  
+  \IF{$|\bfe|_\infty \geq \tau\sigma$}
+    \STATE $result = \bot$
+    \ELSE
+  \STATE $result = \text{Extract}(\bfm)$
+  \ENDIF
+  \ENSURE $result$
+\end{algorithmic}
+\end{algorithm}
+
+\section{Design Rationale}
+\subsection{Hardness assumption}
+
+\subsection{Best known attacks}\label{sec:known_attack_security}
+
+
+
+
+\subsection{Advantages and limitations}
+\paragraph{Most scrutinized lattice-based cryptosystem}
+
+
+\paragraph{\ntru~trapdoor.}
+In general lattice based signature offers best performance among quantum-safe solutions, in terms of the combination of signature 
+sizes and public key sizes. However, the performance changes greatly 
+with how the trapdoor is the constructed. \ntru~trapdoor is in 
+general the most efficient one in the literature;  yet it survived
+20 years of cryptanalysis, which none other lattice based solution 
+has gone through.
+
+
+
+\paragraph{Potential application for signature aggregation}. {\bf ZZ: shall we mention it at all?}
+\subsection{Performance and implementations}
+%\subsection{Performance Analysis}
+
+\paragraph{Optimizations not in this submission package.}
+There are two optimizations that we are aware of, that are not 
+included in this submission package. Namely
+\begin{itemize}
+\item AVX2 based optimization for polynomial multiplication \cite{ntrutoc}; this accelerates polynomial multiplication for $2.3$ times.
+\end{itemize}
+
+
+\subsection{Known Answer Test Values}
+
+
+
+
+\section{IPR Statement}
+
+\bibliographystyle{plain}
+\bibliography{ntrumls}
+
+
+\end{document}
+
