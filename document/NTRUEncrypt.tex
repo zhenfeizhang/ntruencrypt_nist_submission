@@ -2,7 +2,7 @@
 %\documentclass[10pt, onepage]{IEEEtran}
 %\documentclass[10pt]{llncs}
 \documentclass{llncs}
-\usepackage{amssymb,amscd,amsmath,url}
+\usepackage{amssymb,amscd,amsmath,url,hyperref}
 \usepackage{algorithmic}
 \usepackage{algorithm}
 \usepackage{graphicx}
@@ -287,13 +287,17 @@ standardization.
 The submitted cryptosystem consists of : 
 
 \begin{itemize}
-\item \ntrukem: a CPA secure key encapsulation scheme (KEM) based on the original NTRUEncrypt algorithm by Hoffstein, Pipher and Silverman \cite{DBLP:conf/ants/HoffsteinPS98} with parameter sets derived from a recent revision \cite{DBLP:conf/ctrsa/HoffsteinPSSWZ17};
+\item \ntrupke: a public key encryption (PKE) scheme based on the ``{\em original NTRU}" encryption algorithm by Hoffstein, Pipher and Silverman \cite{DBLP:conf/ants/HoffsteinPS98} with parameter sets derived from a recent revision \cite{DBLP:conf/ctrsa/HoffsteinPSSWZ17}, that achieves CCA-2 security via NAEP transformation \cite{DBLP:journals/iacr/Howgrave-GrahamSSW03};
 
-\item \ntrupke: a public key encryption (PKE) scheme based on the above NTRUEncrypt algorithm that achieves CCA-2 security via NAEP transformation \cite{DBLP:journals/iacr/Howgrave-GrahamSSW03};
+\item \ntrukem: a key encapsulation scheme (KEM) uses the above public 
+key encryption algorithm;
 
-\item \ssntrukem: a key encapsulation scheme based on the original NTRUEncrypt algorithm with parameter sets derived from the Stehle-Sternfield ``provable secure" NTRU \cite{DBLP:conf/eurocrypt/StehleS11};
 
-\item \ssntrupke: a public key encryption scheme based on the above provable secure NTRUEncrypt algorithm that achieves CCA-2 security via NAEP transformation \cite{DBLP:journals/iacr/Howgrave-GrahamSSW03}.
+\item \ssntrupke: a public key encryption scheme based on the provable secure  NTRU encryption algorithm \cite{DBLP:conf/eurocrypt/StehleS11} that achieves CCA-2 security via NAEP transformation \cite{DBLP:journals/iacr/Howgrave-GrahamSSW03};
+
+
+\item \ssntrukem: a key encapsulation scheme (KEM) uses the above public 
+key encryption algorithm.
 \end{itemize}
 
 \noindent
@@ -401,6 +405,8 @@ We give a generic description for those functions.
 Implementer may choose to use better (more secure
 or more efficient) instantiations when and if they
 are available.
+Also note that Gaussian samplers are only used by \ssntrupke~and
+\ssntrukem.
 
 \paragraph{Hash function.} Through out the paper
 we will use \hash~to denote a cryptographic secure hash function that takes arbitrary input length and
@@ -410,100 +416,205 @@ instantiation.
 
 
 \paragraph{Trinary Polynomial Generation function.}
+This implementation require a function that samples uniformly from 
+$\Tcal$ and $\Tcal(d,e)$. This function can be build deterministically
+ via a {\em seed} and a hash function.
+ 
 
 \paragraph{Discrete Gaussian sampler (DGS).} Input a
-dimension $N$ and a standard deviation $\sigma$ it outputs a discrete Gaussian distributed vector.
+dimension $N$ and a standard deviation $\sigma$ it outputs a discrete Gaussian distributed vector. In this implementation we use Box-Muller
+approach. We remark that there are better samplers in terms of 
+efficiency or security. We leave the investigation of those samplers
+to future work.
 
 \paragraph{Deterministic Discrete Gaussian sampler (DDGS).}Input a
 dimension $N$, a standard deviation $\sigma$ and
 a seed $s$, it deterministically outputs a discrete Gaussian distributed vector.
-\subsection{The \ntrukem~algorithms}
+
+
+\subsection{The schemes}
+We sketch the algorithms related to our proposed schemes. For simplicity
+and clearness of the presentation, we omit minor details 
+in this high level description. Those includes, for example, checking
+the length of the message and encoding/packing ring elements into binary strings.
+For those detail we refer the readers to the implantation specification
+document submitted also with this document.
+
+\subsubsection{The \ntrupke~scheme}. The \ntrupke~schemes use Algorithms
+\ref{alg:ntrukeygen}, \ref{alg:ntruencrypt} and \ref{alg:ntrudecrypt}.
 
 In an \ntru~cryptosystem, $\bff$ (and $\bfg$, if
 required) are 
 the private keys, while $\bfh$ is the public key.
 Those keys can be generated via algorithm
 %The key generation algorithm is shown in Algorithm 
-\ref{alg:keygen}.
+\ref{alg:ntrukeygen}.
 Note that we use the classical \ntru~flat form (non-product form, cf. \cite{DBLP:journals/iacr/HoffsteinPSSWZ15}) keys 
 with a pre-fixed number of $+1$s and $-1$s.
 
 \begin{algorithm}
-\caption{{\ntrukem}.\keygen}
-\begin{algorithmic}[1]\label{alg:keygen}
-\REQUIRE Parameters $N$, $p$, $q$, $d$
-\ENSURE Public key $\bfh$ and secret key $(p\bff,\bfg)$
-\STATE $\bff \gets T(d+1,d)$  
-\LineIf {$\bff$ is not invertible mod $q$} {go to step 1}
-\STATE $\bfg \gets T(d+1,d)$
-\LineIf {$\bfg$ is not invertible mod $p$} {go to step 3}
+\caption{{\ntrupke}.\keygen}
+\begin{algorithmic}[1]\label{alg:ntrukeygen}
+\REQUIRE Parameters $N$, $p$, $q$, $d$ and a {\em seed}.
+\STATE Instantiate $\textsf{Sampler}$ with $\mathcal{T}(d+1,d)$ and {\em seed};
+\STATE $\bff \gets \textsf{Sampler}$  
+\LineIf {$\bff$ is not invertible mod $q$} {go to step 2}
+\STATE $\bfg \gets \textsf{Sampler}$
+%\LineIf {$\bfg$ is not invertible mod $p$} {go to step 4}
 \STATE $\bfh = \bfg/(p\bff+1) \bmod q$
-\RETURN $\bfh$, $\bfg$ and $\bff$
+\ENSURE Public key $\bfh$ and secret key $(p\bff,\bfg)$
+
 \end{algorithmic}
 \end{algorithm}
 
-We recommend that \ntrukem~to be used for ephemeral
-key establishments via the following algorithms.
-\begin{algorithm}%[H]
-\caption{\ntrukem.\encap}
+
+\begin{algorithm}[H]
+\caption{\ntrupke.\encrypt}
 \begin{algorithmic}[1]
-\label{alg:encrypt}
-\REQUIRE Public key $\bfh$, message $msg$ of length $mlen$, and a parameter set
-  
-  \STATE $\bfm = \text{Pad}(msg)$ 
-  \STATE $\bfr \gets T(d+1,d)$
-  \STATE $\bfc = p\cdot \bfr*\bfh + \bfm$
-\ENSURE A ciphertext $\bfc$
+\label{alg:ntruencrypt}
+\REQUIRE Public key $\bfh$, message $msg$ of length $mlen$, a parameter set and a {\em seed}.
+
+\STATE $\bfm = \text{Pad}(msg, seed)$
+\STATE $rseed = \hash(\bfm|\bfh)$
+\STATE Instantiate $\textsf{Sampler}$ with $\mathcal{T}$ and {\em rseed};
+  \STATE $\bfr \gets \textsf{Sampler}$  
+  \STATE $\bft = \bfr*\bfh$
+    \STATE $tseed = \hash(\bft)$
+   \STATE Instantiate $\textsf{Sampler}$ with $\mathcal{T}$ and {\em tseed}; 
+  \STATE $\bfm_{mask} = \textsf{Sampler}$
+  \STATE $\bfm' = \bfm - \bfm_{mask} \pmod{p}$
+  \STATE $\bfc = \bft + \bfm'$
+\ENSURE Ciphertext $\bfc$
 \end{algorithmic}
 \end{algorithm}
 
-Here the padding algorithm works as follows:
-\begin{itemize}
+The encryption algorithm in Algorithm \ref{alg:ntruencrypt} uses a padding method to deal with potential
+insufficient entropy in a message. The padding algorithm works as follows:
+\begin{enumerate}
+
+
 \item Convert $msg$ into a bit string. This forms the binary coefficients for lower part of polynomial $m$.
 \item The last $167$ coefficients of $m(x)$ are 
 randomly chosen from $\{-1,0,1\}$. This gives over 
 $256$ bits entropy.
 \item The length of $msg$ is converted into an $8$ bit binary string, and forms the last $173$ to $168$ coefficients of $m$.    
-\end{itemize}
+\end{enumerate}
+
+
+\begin{algorithm}
+\caption{\ntrupke.\decrypt}
+\begin{algorithmic}[1]
+\label{alg:ntrudecrypt}
+\REQUIRE Secret key $\bff$, public key $\bfh$, ciphertext $\bfc$, and a parameter.
+  \STATE $\bfm' = \bff*\bfc \pmod{p}$
+  \STATE $\bft = \bfc - \bfm$
+ \STATE $tseed = \hash(\bft)$
+   \STATE Instantiate $\textsf{Sampler}$ with $\mathcal{T}$ and {\em tseed}; 
+  \STATE $\bfm_{mask} = \textsf{Sampler}$
+  \STATE $\bfm  = \bfm' + \bfm_{mask} \pmod{p}$
+\STATE $rseed = \hash(\bfm|\bfh)$
+\STATE Instantiate $\textsf{Sampler}$ with $\mathcal{T}$ and {\em rseed};
+  \STATE $\bfr \gets \textsf{Sampler}$  
+  \STATE $msg, mlen = \text{Extract}(\bfm)$
+  \IF{$p\cdot \bfr*\bfh = \bft$}
+  \STATE $result = msg, mlen$
+  \ELSE
+  \STATE $result = \bot$
+  \ENDIF
+  \ENSURE $result$
+\end{algorithmic}
+\end{algorithm}
+The Extract() operation in Algorithm \ref{alg:ntrudecrypt}  is the inverse of Pad() so we omit the details. It
+outputs a message $m$ and its length $mlen$.
+
+\subsubsection{The \ntrukem~algorithms}
+
+
+We recommend that \ntrukem~to be used for ephemeral
+key establishments via the following algorithms.
+\ntrukem~uses a same key generation algorithm as 
+\ntrupke, namely, Algorithm \ref{alg:ntruencrypt}. Here we present the encapsulation and 
+encapsulation algorithms in  Algorithms \ref{alg:ntruencap} and \ref{alg:ntrudecap}.
+
+In a nutshell, the \ntrukem~scheme uses an \ntrupke~scheme to transport
+an encapsulated secret, and uses both  this secret and the public key
+to derive a shared secret via a secure Key Deviation Function (\textsf{KDF}). 
+
+
+%We remark that when used in an KEM mode, one should 
+%use both $m$ and $pk$ to 
+%derive the session key, i.e. $\textsf{KDF}(m, pk, \dots)$.
+
+
+\begin{algorithm}%[H]
+\caption{\ntrukem.\encap}
+\begin{algorithmic}[1]
+\label{alg:ntruencap}
+\REQUIRE Public key $\bfh$, a parameter set \textsc{Param}, and a {\em seed}
+  
+  \STATE $\text{encaped\_secret}\gets \{0,1\}^{8\times \text{CRYPTO\_BYTES}}$ 
+  \STATE $\bfc = $\ntrupke.\encrypt$(\bfh, \text{encaped\_secret}, \text{CRYPTO\_BYTES}, \textsc{Param}, seed)$
+  \STATE $ss = \textsf{KDF}(\text{encaped\_secret},\bfh)$.
+\ENSURE A ciphertext $\bfc$ and the shared secret $ss$. 
+\end{algorithmic}
+\end{algorithm}
 
 
 \begin{algorithm}%[H]
 \caption{\ntrukem.\decap}
 \begin{algorithmic}[1]
-\label{alg:encrypt}
-\REQUIRE Secret key $f$ and a parameter set
+\label{alg:ntrudecap}
+\REQUIRE Secret key $f$ and a parameter set \textsc{Param}
   
-  \STATE $\bfm = (p\cdot \bfc*\bff) \bmod p$ 
-  \STATE $msg = \text{Extract}(\bfm)$
-\ENSURE A message $msg$
+  \STATE $\text{encaped\_secret} =$\ntrupke.\decrypt$(\bff, \bfh,\bfc, \textsc{Param})$;
+  \STATE $ss = \textsf{KDF}(\text{encaped\_secret},\bfh)$.
+\ENSURE  The shared secret $ss$.
 \end{algorithmic}
 \end{algorithm}
-The extract operation is the inverse of Pad so we omit the details. It
-outputs a message $m$ and its length $mlen$.
 
-We remark that when used in an KEM mode, one should 
-use both $m$ and $pk$ to 
-derive the session key, i.e. $\textsf{KDF}(m, pk, \dots)$. Also the responder needs to pick an $m$ 
-that has sufficient entropy for the given security
-level. In our implementation we require $32$ bytes
-for $m$, regardless of security level. 
+
+ %Also the responder needs to pick an $m$ 
+%that has sufficient entropy for the given security
+%level. In our implementation we require $32$ bytes
+%for $m$, regardless of security level. 
  
 
-\subsection{The \ntrupke~algorithms}
-\ntrupke~uses a same key generation algorithm as 
-\ntrukem. Here we present the encryption and 
-decryption algorithms.
+\subsubsection{The \ssntrupke~algorithms}
+The \ssntrupke~schemes use Algorithms
+\ref{alg:ssntrukeygen}, \ref{alg:ssntruencrypt} and \ref{alg:ssntrudecrypt}.
+
+\begin{algorithm}
+\caption{{\ssntrupke}.\keygen}
+\begin{algorithmic}[1]\label{alg:ssntrukeygen}
+\REQUIRE Parameters $N$, $p$, $q$, $\sigma$ and a  {\em seed}
+\STATE Instantiate $\textsf{Sampler}$ with $\chi_\sigma^N$ and {\em seed};
+\STATE $\bff \gets \textsf{Sampler}$, $\bfg \gets \textsf{Sampler}$;
+\STATE $\bfh = \bfg/(p\bff+1) \bmod q$
+\ENSURE Public key $\bfh$ and secret key $(p\bff,\bfg)$
+
+\end{algorithmic}
+\end{algorithm}
+
+\ssntrupke~uses a similar key generation algorithm as 
+\ntrupke. The major difference is that $\bff$ and $\bfg$ are sampled
+from Gaussian with deviation $\sigma$, rather than 
+from $\mathcal{T}(d,d+1)$. In addition, since \ssntrupke~works over the 
+polynomial ring $\ZZ_q[x]/(x^N+1)$ where every element has an inverse,
+we are not required to check if $\bff$ and $\bfg$ has an inverse.
+
+
 \begin{algorithm}%[H]
-\caption{\ntrupke.\encrypt}
+\caption{\ssntrupke.\encrypt}
 \begin{algorithmic}[1]
-\label{alg:encrypt}
+\label{alg:ssntruencrypt}
 \REQUIRE Public key $\bfh$, message $msg$ of length $mlen$, and a parameter set
 \STATE $\bfm = \text{Pad}(msg)$
-  \STATE $\bfr = \text{hash}(\bfm|\bfh)$
-  \STATE $\bft = \bfr*\bfh$
-  \STATE $\bfm_{mask} = \text{hash}(\bft)$
+  \STATE $\bfr = \text{DDGS}(\bfm|\bfh)$
+  \STATE $\bfe = \text{DGS}$
+  \STATE $\bft = p\cdot\bfr*\bfh$
+  \STATE $\bfm_{mask} = \text{hash}((\bft\bmod p))$
   \STATE $\bfm' = \bfm - \bfm_{mask} \pmod{p}$
-  \STATE $\bfc = \bft + \bfm'$
+  \STATE $\bfc = \bft + p\cdot \bfe + \bfm'$
 \ENSURE Ciphertext $\bfc$
 \end{algorithmic}
 \end{algorithm}
@@ -511,40 +622,26 @@ decryption algorithms.
 
 
 \begin{algorithm}%[H]
-\caption{\ntrupke.\decrypt}
+\caption{\ssntrupke.\decrypt}
 \begin{algorithmic}[1]
-\label{alg:decrypt}
+\label{alg:ssntrudecrypt}
 \REQUIRE Secret key $f$, public key $h$, ciphertext $c$, and a parameter.
   \STATE $\bfm' = \bff*\bfc \pmod{p}$
   \STATE $\bft = \bfc - \bfm$
-  \STATE $\bfm_{mask} = \text{hash}(\bft)$
+  \STATE $\bfm_{mask} = \text{hash}((\bft \bmod p))$
   \STATE $\bfm  = \bfm' + \bfm_{mask} \pmod{p}$
-  \STATE $\bfr = hash(\bfm|\bfh)$
-  \STATE $msg = \text{Extract}(\bfm)$
-  \IF{$p\cdot \bfr*\bfh = \bft$}
-  \STATE $result = msg$
-  \ELSE
-  \STATE $result = \bot$
+  \STATE $\bfr = \text{DDGS}(\bfm|\bfh)$
+  \STATE $\bfe = p^{-1}(\bft - \bfr*\bfh)$  
+  \IF{$|\bfe|_\infty \geq \tau\sigma$}
+    \STATE $result = \bot$
+    \ELSE
+  \STATE $result = \text{Extract}(\bfm)$
   \ENDIF
   \ENSURE $result$
 \end{algorithmic}
 \end{algorithm}
-\subsection{The \ssntrukem~algorithms}
 
-\begin{algorithm}
-\caption{{\ssntrukem}.\keygen}
-\begin{algorithmic}[1]\label{alg:keygen}
-\REQUIRE Parameters $N$, $p$, $q$, $\sigma$
-\ENSURE Public key $\bfh$ and secret key $(p\bff,\bfg)$
-\STATE $\bff \gets \chi_\sigma^N$; $\bfg\gets \chi_\sigma^N$  
-%\LineIf {$\bff$ is not invertible mod $q$} {go to step 1}
-%\STATE $\bfg \gets T(d+1,d)$
-%\LineIf {$\bfg$ is not invertible mod $p$} {go to step 3}
-\STATE $\bfh = \bfg/(p\bff+1) \bmod q$
-\RETURN $\bfh$, $\bfg$ and $\bff$
-\end{algorithmic}
-\end{algorithm}
-
+\subsection{The \ssntrukem algorithms}
 \begin{algorithm}%[H]
 \caption{\ssntrukem.\encap}
 \begin{algorithmic}[1]
@@ -572,47 +669,8 @@ decryption algorithms.
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{The \ssntrupke algorithms}
-\ssntrupke~uses a same key generation algorithm as 
-\ntrukem. Here we present the encryption and 
-decryption algorithms.
-\begin{algorithm}%[H]
-\caption{\ssntrupke.\encrypt}
-\begin{algorithmic}[1]
-\label{alg:encrypt}
-\REQUIRE Public key $\bfh$, message $msg$ of length $mlen$, and a parameter set
-\STATE $\bfm = \text{Pad}(msg)$
-  \STATE $\bfr = \text{DDGS}(\bfm|\bfh)$
-  \STATE $\bfe = \text{DGS}$
-  \STATE $\bft = p\cdot\bfr*\bfh$
-  \STATE $\bfm_{mask} = \text{hash}((\bft\bmod p))$
-  \STATE $\bfm' = \bfm - \bfm_{mask} \pmod{p}$
-  \STATE $\bfc = \bft + p\cdot \bfe + \bfm'$
-\ENSURE Ciphertext $\bfc$
-\end{algorithmic}
-\end{algorithm}
 
 
-
-\begin{algorithm}%[H]
-\caption{\ssntrupke.\decrypt}
-\begin{algorithmic}[1]
-\label{alg:decrypt}
-\REQUIRE Secret key $f$, public key $h$, ciphertext $c$, and a parameter.
-  \STATE $\bfm' = \bff*\bfc \pmod{p}$
-  \STATE $\bft = \bfc - \bfm$
-  \STATE $\bfm_{mask} = \text{hash}((\bft \bmod p))$
-  \STATE $\bfm  = \bfm' + \bfm_{mask} \pmod{p}$
-  \STATE $\bfr = \text{DDGS}(\bfm|\bfh)$
-  \STATE $\bfe = p^{-1}(\bft - \bfr*\bfh)$  
-  \IF{$|\bfe|_\infty \geq \tau\sigma$}
-    \STATE $result = \bot$
-    \ELSE
-  \STATE $result = \text{Extract}(\bfm)$
-  \ENDIF
-  \ENSURE $result$
-\end{algorithmic}
-\end{algorithm}
 
 \section{Design Rationale}
 \subsection{Hardness assumption}
