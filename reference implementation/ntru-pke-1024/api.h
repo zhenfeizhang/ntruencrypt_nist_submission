@@ -10,7 +10,7 @@
 
 #define TEST_SS_NTRU_CCA
 
-#define CRYPTO_ALGNAME "SS_NTRU_CCA_1024"
+#define CRYPTO_ALGNAME "SS_NTRU_PKE_1024"
 
 #define TEST_PARAM_SET  NTRU_CCA_1024
 #define CRYPTO_SECRETKEYBYTES 8194  /* secret key length */

@@ -22,7 +22,7 @@
 #define CRYPTO_CIPHERTEXTBYTES 610
 #define CRYPTO_BYTES 32             /* padding ? */
 #define CRYPTO_RANDOMBYTES 32       /* random input */
-#define CRYPTO_ALGNAME "NTRU_CCA_443"
+#define CRYPTO_ALGNAME "NTRU_PKE_443"
 
 
 /* ebacs API: key gen */

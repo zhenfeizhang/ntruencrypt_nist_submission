@@ -42,7 +42,7 @@ static PARAM_SET ParamSets[] = {
     },
     {
         NTRU_CCA_443,         /* parameter set id */
-        "NTRU_KEM_443",       /* human readable name */
+        "NTRU_PKE_443",       /* human readable name */
         {0xff, 0xff, 0xf9},   /* OID */
         9,                   /* bitlength of N */
         11,                   /* bitlength of q */
@@ -58,7 +58,7 @@ static PARAM_SET ParamSets[] = {
 
     {
         NTRU_CCA_743,         /* parameter set id */
-        "NTRU_KEM_743",       /* human readable name */
+        "NTRU_PKE_743",       /* human readable name */
         {0xff, 0xff, 0xf9},   /* OID */
         9,                   /* bitlength of N */
         11,                   /* bitlength of q */

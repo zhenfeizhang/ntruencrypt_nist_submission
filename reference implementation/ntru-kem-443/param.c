@@ -14,16 +14,16 @@ static PARAM_SET ParamSets[] = {
         NTRU_KEM_443,         /* parameter set id */
         "NTRU_KEM_443",       /* human readable name */
         {0xff, 0xff, 0xf9},   /* OID */
-        9,                    /* bitlength of N */
+        9,                   /* bitlength of N */
         11,                   /* bitlength of q */
-        443,                  /* ring degree */
-        610,                  /* length of packed pk */
-        89,                   /* length of packed sk */
+        443,                 /* ring degree */
+        610,                /* length of packed pk */
+        89,                /* length of packed sk */
         3,                    /* message space prime */
-        2048,                 /* ring modulus */
+        2048,                 /* ring modulus, 2^30+2^13+1 */
         115,                  /* standard deviation, ~ 2^10.5 */
-        448,                  /* degree for karatsuba */
-        54,                   /* maximum length of a message (in bytes) */
+        448,                   /* degree for karatsuba */
+        33,                 /* maximum length of a message (in bytes) */
     },
     {
         NTRU_KEM_743,         /* parameter set id */
@@ -33,16 +33,16 @@ static PARAM_SET ParamSets[] = {
         11,                   /* bitlength of q */
         743,                 /* ring degree */
         1022,                /* length of packed pk */
-        149,                /* length of packed sk */
+        149,                  /* length of packed sk */
         3,                    /* message space prime */
         2048,                 /* ring modulus, 2^30+2^13+1 */
         247,                  /* standard deviation, ~ 2^10.5 */
         768,                   /* degree for karatsuba */
-        91,                 /* maximum length of a message (in bytes) */
+        73,                 /* maximum length of a message (in bytes) */
     },
     {
         NTRU_CCA_443,         /* parameter set id */
-        "NTRU_KEM_443",       /* human readable name */
+        "NTRU_PKE_443",       /* human readable name */
         {0xff, 0xff, 0xf9},   /* OID */
         9,                   /* bitlength of N */
         11,                   /* bitlength of q */
@@ -58,7 +58,7 @@ static PARAM_SET ParamSets[] = {
 
     {
         NTRU_CCA_743,         /* parameter set id */
-        "NTRU_KEM_743",       /* human readable name */
+        "NTRU_PKE_743",       /* human readable name */
         {0xff, 0xff, 0xf9},   /* OID */
         9,                   /* bitlength of N */
         11,                   /* bitlength of q */

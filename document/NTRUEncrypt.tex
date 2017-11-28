@@ -5,9 +5,11 @@
 \usepackage{amssymb,amscd,amsmath,url,hyperref}
 \usepackage{algorithmic}
 \usepackage{algorithm}
+\usepackage{multirow}
 \usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{bytefield}
+\usepackage{threeparttable}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
@@ -180,9 +182,11 @@
 \newcommand{\bfP}{{\bf P}}
 \newcommand{\bfS}{{\bf S}}
 \newcommand{\bfT}{{\bf T}}
+
 \newcommand{\bfzero}{{\bf{0}}}
 \newcommand{\bfU}{{\bf U}}
 \newcommand{\bfV}{{\bf V}}
+\newcommand{\bfY}{{\bf Y}}
 \newcommand{\pqntrusign}{{\sf{pqNTRUSign}}}
 \newcommand{\ntru}{{\sf{NTRU}}}
 \newcommand{\ntrukem}{{\sf{ntru-kem}}}
@@ -252,6 +256,11 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\newcommand{\norm}[1]{\Vert#1\Vert}
+\newcommand{\normi}[1]{\Vert#1\Vert_\infty}
+\newcommand{\normo}[1]{\Vert#1\Vert_1}
+\newcommand{\normt}[1]{\Vert#1\Vert_2}
+\newcommand{\round}[1]{\lfloor#1\rceil}
 
 
 \begin{document}
@@ -289,14 +298,14 @@ The submitted cryptosystem consists of :
 \begin{itemize}
 \item \ntrupke: a public key encryption (PKE) scheme based on the ``{\em original NTRU}" encryption algorithm by Hoffstein, Pipher and Silverman \cite{DBLP:conf/ants/HoffsteinPS98} with parameter sets derived from a recent revision \cite{DBLP:conf/ctrsa/HoffsteinPSSWZ17}, that achieves CCA-2 security via NAEP transformation \cite{DBLP:journals/iacr/Howgrave-GrahamSSW03};
 
-\item \ntrukem: a key encapsulation scheme (KEM) uses the above public 
+\item \ntrukem: a key encapsulation mechanism (KEM) using the above public 
 key encryption algorithm;
 
 
 \item \ssntrupke: a public key encryption scheme based on the provable secure  NTRU encryption algorithm \cite{DBLP:conf/eurocrypt/StehleS11} that achieves CCA-2 security via NAEP transformation \cite{DBLP:journals/iacr/Howgrave-GrahamSSW03};
 
 
-\item \ssntrukem: a key encapsulation scheme (KEM) uses the above public 
+\item \ssntrukem: a key encapsulation mechanism (KEM) using the above public 
 key encryption algorithm.
 \end{itemize}
 
@@ -312,6 +321,7 @@ This documents addresses the following  requirements:
 \item {\bf Security analysis}
 \item {\bf Statement of IPR}
 \end{itemize}
+
 
 \noindent
 Submission information:
@@ -331,6 +341,32 @@ Onboard Security Inc.
 
 \item {\bf Backup point of contact:} William Whyte, wwhyte@onboardsecurity.com, Onboard Security, 187 Ballardvale St. Suite A202, Wilmington, MA, 01887, U.S.
      
+\end{itemize}
+
+The following academic papers contain
+cryptographic designs, 
+hardness results,
+security analysis and parameter derivations 
+related to the submitted cryptosystem.
+
+\begin{itemize}
+\item {\em NTRU, A ring-based public key cryptosystem}, 1998.
+\item {\em {NAEP:} provable security in the presence of decryption failures}, 2003.
+\item {\em A hybrid lattice-reduction and meet-in-the-middle attack against
+  {NTRU}}, 2007.
+\item {\em Choosing NTRUEncrypt parameters in light of combined lattice
+  reduction and {MITM} approaches}, 2008.
+\item {\em Making {NTRU} as secure as worst-case problems over ideal lattices}, 2011.
+\item {\em Choosing parameters for NTRUEncrypt}, 2017.
+
+\end{itemize}
+
+
+Additional information related to implementations, such as public key/private key encodings, 
+conversions, etc. can be found in the additional supporting document:
+
+\begin{itemize}
+\item {\em Efficient Embedded Security Standard (EESS) \#1.} Version 3.3, 2017.
 \end{itemize}
 
 
@@ -363,6 +399,7 @@ Modular operations are center lifted, for example $a\bmod q$ returns an integer 
 
 We set the notation:
 \begin{align*}
+\mathcal{B}_N&=\left\{\text{binary polynomials}\right\}\\
   \Tcal_N&=\left\{\text{trinary polynomials}\right\}\\
   \Tcal_N(d,e)&=\left\{
         \begin{tabular}{l}
@@ -371,10 +408,27 @@ We set the notation:
         \end{tabular}
       \right\}
 \end{align*}
-If~$N$ is fixed we will write~$\Tcal$ and $\Tcal(d,e)$ instead.
+If~$N$ is fixed we will write~$\mathcal{B}$, $\Tcal$ and $\Tcal(d,e)$ instead.
 
 %\subsection{The scheme}
-\subsection{\ntru~lattice}
+\subsection{\ntru~and lattices}
+%\subsubsection{Details}
+%For the sake of completeness, we present the related problems. 
+A lattice $\Lcal$ is a discrete sub-group of $\RR^n$, or equivalently,
+the set of all the integral combinations of $d \leq n$ linearly independent vectors over $\RR$:
+$$\Lcal \defeq \ZZ \bfb_1+ \ZZ \bfb_2 + \dots + \ZZ \bfb_d , \bfb_i \in \RR^n.$$
+$\bfB \defeq ( \bfb_1 ,\dots ,\bfb_d )^T$ is called a basis of $\Lcal$.
+
+\begin{definition}[$\gamma$-SVP and uSVP]
+Given a lattice $\Lcal$, finding a vector that is no longer than $\gamma\cdot \lambda_1(\Lcal)$ is called the {\em approximate shortest vector problem ($\gamma$-SVP)}, 
+where $\lambda_1$ is the first minima, i.e, the length of the shortest vector, of the lattice.
+
+ Given a particular lattice $\Lcal$, where
+there exists a unique shortest non-zero vector, finding this vector is called the 
+{\em unique shortest vector problem}.
+\end{definition}
+
+
 Let $f(x)$, $g(x)$ and $h(x)$ be $3$ polynomials in $\Rcal_q$,
 where $f(x)$ and $g(x)$ have very small coefficients; $h(x) = p^{-1}g(x)f^{-1}(x)$.  We express by
 $\bff$, $\bfg$  and  $\bfh$ the vector form of the polynomials. Also let $\bfF$, $\bfG$ and  $\bfH$ be the matrix  obtained from 
@@ -399,6 +453,19 @@ $
 $. %We also require $g(x)$ to be invertible over $\Rcal_p$,
 %which is the same as  $\bfG$ being invertible mod $p$.
 
+
+%We view an \ntru~lattice as an $\Rcal_q$ module of rank $2$. 
+%Let $\bff, \bfg \in \Rcal_q$ with small coefficients.
+%Let $\bfh = \bfg/\bff$ over $\Rcal_q$.
+%The \ntru~lattice associated with $\bfh$ is defined as
+%\[\Lcal \defeq \{(\bfs,\bft)\in \Rcal_q^2: \bft  \equiv  \bfs \bfh \mod q\}.\]
+\begin{definition}[\ntru~assumption]
+Given $\bfh$, it is  hard to 
+find $\bff$ and $\bfg$.
+\end{definition}
+The \ntru~assumption can be reduced to the uSVP for the \ntru~lattice.
+
+
 \subsection{Auxiliary functions}
 Let us firstly define some auxiliary functions. Those functions are building blocks for our algorithm.
 We give a generic description for those functions.
@@ -411,23 +478,32 @@ Also note that Gaussian samplers are only used by \ssntrupke~and
 \paragraph{Hash function.} Through out the paper
 we will use \hash~to denote a cryptographic secure hash function that takes arbitrary input length and
 outputs a binary string with arbitrary length. In
-our submission, we use \textsf{SHA3-512} for such
+our submission, we use \textsf{SHA-512} for such
 instantiation.
+
+\paragraph{Seed expansion function.} We will use a \textsf{Salsa20} \cite{Salsa20}
+based pseudo-random number generator as the seed expansion function.
+\textsf{Salsa20} is a fast and well accepted stream cipher. It is upto 5 times
+faster than the \textsf{AES} based solutions through our benchmark 
+on computers that do not have \textsf{AES-NI} instructions.
+ We remark that although  we did not use the
+\textsf{AES}-based seed expansion function provided by NIST for efficiency  reasons,
+such a modification can be made quite easily. 
 
 
 \paragraph{Trinary Polynomial Generation function.}
-This implementation require a function that samples uniformly from 
+This implementation require a function that samples uniformly from $\mathcal{B}$,
 $\Tcal$ and $\Tcal(d,e)$. This function can be build deterministically
  via a {\em seed} and a hash function.
  
 
-\paragraph{Discrete Gaussian sampler (DGS).} Input a
+\paragraph{Discrete Gaussian sampler (\textsf{DGS}).} Input a
 dimension $N$ and a standard deviation $\sigma$ it outputs a discrete Gaussian distributed vector. In this implementation we use Box-Muller
 approach. We remark that there are better samplers in terms of 
 efficiency or security. We leave the investigation of those samplers
 to future work.
 
-\paragraph{Deterministic Discrete Gaussian sampler (DDGS).}Input a
+\paragraph{Deterministic Discrete Gaussian sampler (\textsf{DDGS}).}Input a
 dimension $N$, a standard deviation $\sigma$ and
 a seed $s$, it deterministically outputs a discrete Gaussian distributed vector.
 
@@ -435,10 +511,10 @@ a seed $s$, it deterministically outputs a discrete Gaussian distributed vector.
 \subsection{The schemes}
 We sketch the algorithms related to our proposed schemes. For simplicity
 and clearness of the presentation, we omit minor details 
-in this high level description. Those includes, for example, checking
-the length of the message and encoding/packing ring elements into binary strings.
+in this high level description. Those includes, for example, checking that
+the length of the message valid, encoding/packing ring elements into binary strings and vice versa, etc.
 For those detail we refer the readers to the implantation specification
-document submitted also with this document.
+document submitted along with this document.
 
 \subsubsection{The \ntrupke~scheme}. The \ntrupke~schemes use Algorithms
 \ref{alg:ntrukeygen}, \ref{alg:ntruencrypt} and \ref{alg:ntrudecrypt}.
@@ -449,13 +525,13 @@ the private keys, while $\bfh$ is the public key.
 Those keys can be generated via algorithm
 %The key generation algorithm is shown in Algorithm 
 \ref{alg:ntrukeygen}.
-Note that we use the classical \ntru~flat form (non-product form, cf. \cite{DBLP:journals/iacr/HoffsteinPSSWZ15}) keys 
+Note that we use the classical \ntru~flat form (non-product form, cf. \cite{DBLP:conf/ctrsa/HoffsteinPSSWZ17}) keys 
 with a pre-fixed number of $+1$s and $-1$s.
 
 \begin{algorithm}
 \caption{{\ntrupke}.\keygen}
 \begin{algorithmic}[1]\label{alg:ntrukeygen}
-\REQUIRE Parameters $N$, $p$, $q$, $d$ and a {\em seed}.
+\REQUIRE A parameter set \textsc{Param} = $\{N$, $p$, $q$, $d\}$ and a {\em seed}.
 \STATE Instantiate $\textsf{Sampler}$ with $\mathcal{T}(d+1,d)$ and {\em seed};
 \STATE $\bff \gets \textsf{Sampler}$  
 \LineIf {$\bff$ is not invertible mod $q$} {go to step 2}
@@ -472,7 +548,7 @@ with a pre-fixed number of $+1$s and $-1$s.
 \caption{\ntrupke.\encrypt}
 \begin{algorithmic}[1]
 \label{alg:ntruencrypt}
-\REQUIRE Public key $\bfh$, message $msg$ of length $mlen$, a parameter set and a {\em seed}.
+\REQUIRE Public key $\bfh$, message $msg$ of length $mlen$, a parameter set \textsc{Param} and a {\em seed}.
 
 \STATE $\bfm = \text{Pad}(msg, seed)$
 \STATE $rseed = \hash(\bfm|\bfh)$
@@ -481,7 +557,7 @@ with a pre-fixed number of $+1$s and $-1$s.
   \STATE $\bft = \bfr*\bfh$
     \STATE $tseed = \hash(\bft)$
    \STATE Instantiate $\textsf{Sampler}$ with $\mathcal{T}$ and {\em tseed}; 
-  \STATE $\bfm_{mask} = \textsf{Sampler}$
+  \STATE $\bfm_{mask} \gets \textsf{Sampler}$
   \STATE $\bfm' = \bfm - \bfm_{mask} \pmod{p}$
   \STATE $\bfc = \bft + \bfm'$
 \ENSURE Ciphertext $\bfc$
@@ -489,15 +565,18 @@ with a pre-fixed number of $+1$s and $-1$s.
 \end{algorithm}
 
 The encryption algorithm in Algorithm \ref{alg:ntruencrypt} uses a padding method to deal with potential
-insufficient entropy in a message. The padding algorithm works as follows:
+insufficient entropy in a message.
+Assuming the message length is valid and less than
+$(N-173)$ bits
+, the padding algorithm works as follows:
 \begin{enumerate}
 
 
-\item Convert $msg$ into a bit string. This forms the binary coefficients for lower part of polynomial $m$.
+\item Convert $msg$ into a bit string. Each bit forms a binary coefficients for lower part of polynomial $m$, starting from coefficient $0$.
 \item The last $167$ coefficients of $m(x)$ are 
-randomly chosen from $\{-1,0,1\}$. This gives over 
+randomly chosen from $\{-1,0,1\}$ (with an input seed). This gives over 
 $256$ bits entropy.
-\item The length of $msg$ is converted into an $8$ bit binary string, and forms the last $173$ to $168$ coefficients of $m$.    
+\item The length of $msg$ is converted into an $8$ bit binary string, and forms the last $173$ to $168$ coefficients of $m(x)$.    
 \end{enumerate}
 
 
@@ -505,7 +584,7 @@ $256$ bits entropy.
 \caption{\ntrupke.\decrypt}
 \begin{algorithmic}[1]
 \label{alg:ntrudecrypt}
-\REQUIRE Secret key $\bff$, public key $\bfh$, ciphertext $\bfc$, and a parameter.
+\REQUIRE Secret key $\bff$, public key $\bfh$, ciphertext $\bfc$, and a parameter set \textsc{Param}.
   \STATE $\bfm' = \bff*\bfc \pmod{p}$
   \STATE $\bft = \bfc - \bfm$
  \STATE $tseed = \hash(\bft)$
@@ -527,6 +606,12 @@ $256$ bits entropy.
 The Extract() operation in Algorithm \ref{alg:ntrudecrypt}  is the inverse of Pad() so we omit the details. It
 outputs a message $m$ and its length $mlen$.
 
+\begin{remark}
+Since NIST's API does not have an input field for
+public key $\bfh$, we have encoded the public key
+in the secret key to make the algorithm compatible
+with existing API.
+\end{remark}
 \subsubsection{The \ntrukem~algorithms}
 
 
@@ -534,7 +619,7 @@ We recommend that \ntrukem~to be used for ephemeral
 key establishments via the following algorithms.
 \ntrukem~uses a same key generation algorithm as 
 \ntrupke, namely, Algorithm \ref{alg:ntruencrypt}. Here we present the encapsulation and 
-encapsulation algorithms in  Algorithms \ref{alg:ntruencap} and \ref{alg:ntrudecap}.
+decapsulation algorithms in  Algorithms \ref{alg:ntruencap} and \ref{alg:ntrudecap}.
 
 In a nutshell, the \ntrukem~scheme uses an \ntrupke~scheme to transport
 an encapsulated secret, and uses both  this secret and the public key
@@ -564,7 +649,7 @@ to derive a shared secret via a secure Key Deviation Function (\textsf{KDF}).
 \caption{\ntrukem.\decap}
 \begin{algorithmic}[1]
 \label{alg:ntrudecap}
-\REQUIRE Secret key $f$ and a parameter set \textsc{Param}
+\REQUIRE Secret key $\bff$ and a parameter set \textsc{Param}
   
   \STATE $\text{encaped\_secret} =$\ntrupke.\decrypt$(\bff, \bfh,\bfc, \textsc{Param})$;
   \STATE $ss = \textsf{KDF}(\text{encaped\_secret},\bfh)$.
@@ -586,7 +671,7 @@ The \ssntrupke~schemes use Algorithms
 \begin{algorithm}
 \caption{{\ssntrupke}.\keygen}
 \begin{algorithmic}[1]\label{alg:ssntrukeygen}
-\REQUIRE Parameters $N$, $p$, $q$, $\sigma$ and a  {\em seed}
+\REQUIRE Parameter sets \textsc{Param} $=\{N$, $p$, $q$, $\sigma\}$ and a  {\em seed}
 \STATE Instantiate $\textsf{Sampler}$ with $\chi_\sigma^N$ and {\em seed};
 \STATE $\bff \gets \textsf{Sampler}$, $\bfg \gets \textsf{Sampler}$;
 \STATE $\bfh = \bfg/(p\bff+1) \bmod q$
@@ -607,12 +692,16 @@ we are not required to check if $\bff$ and $\bfg$ has an inverse.
 \caption{\ssntrupke.\encrypt}
 \begin{algorithmic}[1]
 \label{alg:ssntruencrypt}
-\REQUIRE Public key $\bfh$, message $msg$ of length $mlen$, and a parameter set
-\STATE $\bfm = \text{Pad}(msg)$
-  \STATE $\bfr = \text{DDGS}(\bfm|\bfh)$
-  \STATE $\bfe = \text{DGS}$
+\REQUIRE Public key $\bfh$, message $msg$ of length $mlen$, \textsc{Param} and a {\em seed}
+\STATE $\bfm = \text{Pad}(msg,seed)$
+\STATE $rseed = \hash(\bfm|\bfh)$
+   \STATE Instantiate $\textsf{Sampler}$ with $\chi_\sigma^N$ and {\em rseed};
+   \STATE $\bfr \gets \textsf{Sampler}$, $\bfe \gets \textsf{Sampler}$
   \STATE $\bft = p\cdot\bfr*\bfh$
-  \STATE $\bfm_{mask} = \text{hash}((\bft\bmod p))$
+  
+  \STATE $tseed = \hash(\bft)$
+  \STATE Instantiate $\textsf{Sampler}$ with $\cal{B}$ and {\em tseed};
+  \STATE $\bfm_{mask} \gets \textsf{Sampler}$
   \STATE $\bfm' = \bfm - \bfm_{mask} \pmod{p}$
   \STATE $\bfc = \bft + p\cdot \bfe + \bfm'$
 \ENSURE Ciphertext $\bfc$
@@ -625,12 +714,17 @@ we are not required to check if $\bff$ and $\bfg$ has an inverse.
 \caption{\ssntrupke.\decrypt}
 \begin{algorithmic}[1]
 \label{alg:ssntrudecrypt}
-\REQUIRE Secret key $f$, public key $h$, ciphertext $c$, and a parameter.
+\REQUIRE Secret key $\bff$, public key $\bfh$, ciphertext $\bfc$, and a parameter \textsc{Param}.
   \STATE $\bfm' = \bff*\bfc \pmod{p}$
   \STATE $\bft = \bfc - \bfm$
-  \STATE $\bfm_{mask} = \text{hash}((\bft \bmod p))$
+  \STATE $tseed = \hash(\bft)$
+  \STATE Instantiate $\textsf{Sampler}$ with $\cal{B}$ and {\em tseed};
+  \STATE $\bfm_{mask} \gets \textsf{Sampler}$
+%  \STATE $\bfm_{mask} = \text{hash}((\bft \bmod p))$
   \STATE $\bfm  = \bfm' + \bfm_{mask} \pmod{p}$
-  \STATE $\bfr = \text{DDGS}(\bfm|\bfh)$
+\STATE $rseed = \hash(\bfm|\bfh)$
+   \STATE Instantiate $\textsf{Sampler}$ with $\chi_\sigma^N$ and {\em rseed};
+   \STATE $\bfr \gets \textsf{Sampler}$
   \STATE $\bfe = p^{-1}(\bft - \bfr*\bfh)$  
   \IF{$|\bfe|_\infty \geq \tau\sigma$}
     \STATE $result = \bot$
@@ -641,18 +735,24 @@ we are not required to check if $\bff$ and $\bfg$ has an inverse.
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{The \ssntrukem algorithms}
+\subsubsection{The \ssntrukem algorithms}
+The algorithms for \ssntrukem~are described in \ref{alg:ssencap} and 
+\ref{alg:ssdecap}. It uses a same method as \ntrukem~to convert a public key 
+encryption scheme into a key encapsulation mechanism.
+
+
 \begin{algorithm}%[H]
 \caption{\ssntrukem.\encap}
 \begin{algorithmic}[1]
-\label{alg:encrypt}
-\REQUIRE Public key $h$, message $msg$ of length $mlen$, and a parameter set
+\label{alg:ssencap}
+\REQUIRE Public key $\bfh$, message $msg$ of length $mlen$, a parameter set
+  \textsf{Param} and a {\em seed}
   
-  \STATE $m = \text{Pad}(msg)$ 
-  \STATE $\bfr \gets \chi_\sigma^N$; $\bfe\gets \chi_\sigma^N$ 
+  \STATE $\text{encaped\_secret}\gets \{0,1\}^{8\times \text{CRYPTO\_BYTES}}$ 
+  \STATE $\bfc = $\ssntrupke.\encrypt$(\bfh, \text{encaped\_secret}, \text{CRYPTO\_BYTES}, \textsc{Param}, seed)$
+  \STATE $ss = \textsf{KDF}(\text{encaped\_secret},\bfh)$.
+\ENSURE A ciphertext $\bfc$ and the shared secret $ss$. 
 
-  \STATE $\bfc = p\cdot \bfr*\bfh + p\cdot \bfe + \bfm$
-\ENSURE Ciphertext $\bfc$
 \end{algorithmic}
 \end{algorithm}
 
@@ -660,12 +760,12 @@ we are not required to check if $\bff$ and $\bfg$ has an inverse.
 \begin{algorithm}%[H]
 \caption{\ssntrukem.\decap}
 \begin{algorithmic}[1]
-\label{alg:encrypt}
-\REQUIRE Secret key $f$ and a parameter set
+\label{alg:ssdecap}
+\REQUIRE Secret key $f$ and a parameter set \textsc{Param}
   
-  \STATE $\bfm = (p\cdot \bfc*\bff) \bmod p$ 
-  \STATE $msg = \text{Extract}(\bfm)$
-\ENSURE Ciphertext $c$
+  \STATE $\text{encaped\_secret} =$\ssntrupke.\decrypt$(\bff, \bfh,\bfc, \textsc{Param})$;
+  \STATE $ss = \textsf{KDF}(\text{encaped\_secret},\bfh)$.
+\ENSURE  The shared secret $ss$.
 \end{algorithmic}
 \end{algorithm}
 
@@ -674,44 +774,549 @@ we are not required to check if $\bff$ and $\bfg$ has an inverse.
 
 \section{Design Rationale}
 \subsection{Hardness assumption}
+\subsubsection{Overview} We firstly give an overview of the hardness
+assumptions in this proposal.
+\begin{itemize}
+\item For \ntrupke~and \ntrukem~schemes:
+\begin{itemize}
+\item The CPA security is based on the \ntru~assumption;
+\item We use NAEP transformation \cite{DBLP:conf/ctrsa/Howgrave-GrahamSW05} to convert the scheme into a CCA-2 secure encryption scheme.
+\end{itemize} 
+\item For \ssntrupke~and \ssntrukem~schemes:
+\begin{itemize}
+\item The CPA security is based on the ring learning with error (R-LWE) problem \cite{DBLP:conf/eurocrypt/StehleS11};
+\item We use NAEP transformation \cite{DBLP:conf/ctrsa/Howgrave-GrahamSW05} to convert the scheme into a CCA-2 secure encryption scheme.
+\end{itemize} 
+\end{itemize}
+All the above problems and notions are well studied in the literature,
+except perhaps for NAEP transform. Therefore we
+give a high level description of  NAEP and show its
+connects to the well-known Fujisaki-Okamoto transform.
+
+
+\subsubsection{NAEP transform}
+In \cite{Fujisaki1999}, the authors proposed a generic method to 
+transform the CPA secure encryption algorithm into a CCA-2 secure version.
+This method is usually referred to as Fujisaki-Okamoto transform. At a high level, it works as follows. During the encryption, one firstly choose
+a salt, and append it to the message. Then hash the appended message into
+a random element that is to be used in the encryption. 
+During the decryption, after one has recovered the padded message, one 
+re-encrypt the message with the same salt, and compared the result ciphertext with received one. If those two does not match, abort the 
+decryption.
+
+The NEAP \cite{DBLP:conf/ctrsa/Howgrave-GrahamSW05} transform that we
+used in Algorithms \ref{alg:ntruencrypt} and \ref{alg:ssntruencrypt} is 
+similar to the above Fujisaki-Okamoto transform. In addition, it builds 
+an additional all-or-nothing mask which is also derived from the hash
+of the padded message. With this mask, one will either recover all the 
+coefficients of the message polynomial, or no coefficient at all. It
+also seals the information leakage of $m(1)$ when a polynomial ring of
+$x^N-1$ is used.
+\subsection{Parameters}
+
+
+We present our parameter sets in Table \ref{tab:param} and the macros related  to NIST's APIs in Table \ref{tab:macro}.
+We estimate that 
+\begin{itemize}
+\item \ntru-443 provides 128 bits classical security
+and 84 bits quantum security;
+\item \ntru-743 provides 256 bits classical security
+and 159 bits quantum security;
+\item \ntru-1024 provides $\gg$256 bits classical security
+and 198 bits quantum security.
+\end{itemize}
+The details of the above estimations shall be presented in the next subsection.
+\begin{table}
+\centering
+%\begin{threeparttable}
+\caption{Parameters}
+\label{tab:param}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}\hline
+\textsc{Param} &N & q & p &$\mathcal{R}$ & $d$ & $\sigma$ & MaxMSGLen\\\hline\hline
+\ntru-443&443 & 2048 & 3 & $\frac{\ZZ_q[x]}{x^N-1}$ & 143 & N/A & 33 bytes\\%\hline
+\ntru-743&743 & 2048 & 3 & $\frac{\ZZ_q[x]}{x^N-1}$ & 247 & N/A & 73 bytes\\%\hline
+\ntru-1024&1024 & $2^{30}+2^{13}+1$ & 2 & $\frac{\ZZ_q[x]}{x^N+1}$ & N/A & 724 & 95 bytes\\\hline
+\end{tabular}
+\end{table}
+
+
+\begin{table}
+\centering
+%\begin{threeparttable}
+\caption{MACRO definitions for NIST's API}
+\label{tab:macro}
+\begin{tabular}{|c||c|c|c|c|c|c|c|}\hline
+\textsc{Param} & \multicolumn{2}{|c|}{
+\ntru-443}&\multicolumn{2}{|c|}{\ntru-743}
+&\multicolumn{2}{|c|}{\ntru-1024}
+\\\hline
+\textsc{Scheme}& \ntrupke &\ntrukem &\ntrupke &\ntrukem&\ssntrupke &\ssntrukem \\\hline
+CRYPTO\_SECRETKEYBYTES & \multicolumn{2}{|c|}{700} &\multicolumn{2}{|c|}{1172}&\multicolumn{2}{|c|}{8194} \\
+CRYPTO\_PUBLICKEYBYTES & \multicolumn{2}{|c|}{610} &\multicolumn{2}{|c|}{1022}&\multicolumn{2}{|c|}{4097}\\
+CRYPTO\_BYTES &\multicolumn{2}{|c|}{32}&\multicolumn{2}{|c|}{48} &\multicolumn{2}{|c|}{48}\\
+CRYPTO\_CIPHERTEXTBYTES &\multicolumn{2}{|c|}{610}&\multicolumn{2}{|c|}{1022}&\multicolumn{2}{|c|}{4097}\\\hline
+\end{tabular}
+\end{table}
+We address NIST's required security levels as follows:
+\begin{itemize}
+\item Level 1, equivalent to 128-bit block cipher: use
+\ntrupke~and \ntrukem~with parameter set \ntru-443 or \ntru-743;
+\item Level 2, equivalent to 256-bit hash function: use \ntrupke~and \ntrukem~with parameter set  \ntru-743;
+\item Level 3, equivalent to 192-bit block cipher: use \ntrupke~and \ntrukem~with parameter set \ntru-743;
+\item Level 4, equivalent to 384-bit hash function: use \ntrupke~and \ntrukem~with parameter set\ntru-743, or
+(for extremely conservative purpose)
+ \ssntrupke~and \ssntrukem~with parameter set \ntru-1024; 
+\item Level 5, equivalent to 256-bit block cipher: use \ntrupke~and \ntrukem~with parameter set \ntru-743, or
+(for extremely conservative purpose)
+ \ssntrupke~and \ssntrukem~with parameter set \ntru-1024.
+\end{itemize}
+
+
 
 \subsection{Best known attacks}\label{sec:known_attack_security}
+\subsubsection{Summary}
+In this evaluation, we will
+\begin{enumerate}
 
+
+\item follow the original BKZ 2.0 analysis \cite{BKZ2} with the extreme pruning method to estimate
+the {\bf classical security};
+\item follow the new analysis in \cite{newhope} using BKZ 2.0 with quantum sieving to estimate
+the {\bf quantum security}.
+\end{enumerate}
+\noindent
+For completeness, we also give the analysis result
+of 
+\begin{enumerate}
+\setcounter{enumi}{2}
+\item   the new analysis in \cite{newhope} using BKZ 2.0 with classical sieving.
+\end{enumerate}
+However, we will {\bf not} use this result to estimate the classical security, due to the excessive
+space requirement. We will give more details in
+the following sections.
+
+
+\begin{table}
+\centering
+%\begin{threeparttable}
+\caption{Best Known attacks and their costs}
+\label{tbl:rhf}
+\begin{tabular}{|c|c|c|c|c|c|c|}\hline
+\multirow{2}{*}{Param}  &\multicolumn{2}{|c|}{BKZ + Enum}& \multicolumn{2}{|c|}{BKZ + Sieving}& \multicolumn{2}{|c|}{BKZ + QSieving}\\
+\cline{2-7}
+ &uSVP & Hybrid&uSVP & Hybrid&uSVP & Hybrid\\\hline\hline
+\ntru-443 &189 &{\bf 128} &93&89&85 & {\bf 84}  \\\hline
+\ntru-743 & 443& {\bf 268}&176&173&{\bf 159} & 163\\\hline
+\ntru-1024  &{\bf 590} &805 &218&316&{\bf 198} & 287 \\\hline
+
+\end{tabular}
+\end{table}
+
+
+
+\subsubsection{Lattice attacks}\label{ss:latatt}
+For an NTRUEncrypt public key polynomial $\bfh$, let $\bfH$ be the matrix whose
+row vectors are the cyclic rotation of $\bfh$. Then the \ntru~lattice associated with
+$\bfh$ uses a basis
+$$\bfB = 
+\begin{bmatrix}
+q\bfI_N & 0 \\
+ \bfH  &\bfI_N
+\end{bmatrix}
+$$
+where $\bfI_N$ is an $N$-dimensional identity matrix.
+With in this NTRU lattice, there exist unique shortest vectors, namely,
+the vector form of $\left<\bff,\bfg\right>$ and its cyclic rotations.
+
+This attack was firstly presented in the original \ntru~paper \cite{ntruOrig} circulated during the
+rump session of Crypto'96. It was later observed in \cite{DBLP:conf/eurocrypt/CoppersmithS97} that one does not necessarily need to find the exact secret key
+to be able to decrypt. An attack is successful if the attacker can locate any
+vectors in this lattice that are sufficiently small
+(such as a cyclic rotation of the secret key).
+
+It has been shown in \cite{Gama:2008:PLR:1788414.1788417}
+that the ability to
+locate a unique shortest vector in a lattice depends on the root Hermite
+factor of the lattice, which is the $n$-th root of
+$$
+\frac{\text{Gaussian expected length}}{l_2 \text{ norm of the target vector}}
+$$
+where $n$ is the dimension of the lattice.
+
+Here, we give an estimation
+of the root Hermite factor for the proposed parameter set.
+This lattice has a dimension of $2N$.
+The Gaussian expected
+length of this lattice is $$\sqrt{qN/\pi e},$$ while the
+$l_2$ norm of the target vectors are  $\|\bff,\bfg\|_2$.
+ This gives
+a root Hermite factor of the lattice as
+$$
+\left(\frac{\sqrt{Nq/\pi e}}{\|\bff,\bfg\|_2}\right)^\frac{1}{2N}.$$
+ For \ntrupke~and \ntrukem~we have $\|\bff,\bfg\|_2 \approx \sqrt{4N/3}$, while for \ssntrupke~and \ssntrukem~we have $\|\bff,\bfg\|_2 \approx \sqrt{2N}\sigma$.
+%For example, with $N=743$ we have the root Hermite factor $\approx 1.0025
+%$.
+The table below gives the root Hermite factor of
+corresponding parameter sets.
+
+\begin{table}
+\centering
+%\begin{threeparttable}
+\caption{Root Hermite Factor for \ntru~lattices}
+\label{tbl:rhf}
+\begin{tabular}{|c|c|c|c|c|c|c|}\hline
+N&q  &$\|\bff,\bfg\|_2$& rhf \\\hline
+443 &  2048 & $\sqrt{572}\approx 23.92$& $1.0030$\\\hline
+743 &  2048 & $\sqrt{988}\approx 31.43$ & $1.0020$\\\hline
+1024 & $2^{30}+2^{13}+1$ & 32764.5 & $1.0011$\\\hline
+
+\end{tabular}
+\end{table}
+
+It was believed that current
+technique of BKZ 2.0 \cite{BKZ2} is only able to find a short vector
+with a root Hermite factor of 1.005. %, until for the
+%analysis from \cite{newhope}, we give more details of the .
+%It is safe to conclude that BKZ 2.0 is not applicable against the
+%proposed parameter set.
+However, in \cite{newhope}, the authors give a conservative analysis on the cost of BKZ 2.0 reduction. As pointed out by the
+authors themselves, those estimations are very optimistic about the abilities of an attacker. In particular, unlike
+the analysis of BKZ 2.0 \cite{BKZ2}, where the cost of shortest vector subroutines is estimated via the cost of
+enumeration with extremely pruning \cite{GNR10}, this analysis assumes that for large dimensional lattices shortest vector problems can be
+solved very efficiently using heuristic sieving algorithms, ignoring the
+sub-exponential to exponential requirement of space. % \cite{newhope}.
+
+In a bit details, the best known classical and quantum sieving algorithms have time costs of $2^{0.292n}$ and $2^{0.265n}$, respectively \cite{DBLP:journals/iacr/BaiLS16}. The best plausible quantum short vector problem solver costs more than $2^{0.2075n}$ since this is 
+the space requires to store the list of vectors.
+In practice, sieving tends to process much slower than enumeration techniques. Moreover, sieving algorithms require a similar level of space complexity
+(exponential in $n$), while the space requirement of enumeration techniques is polynomial. 
+
+For the sake of completeness, we present the estimated cost
+of BKZ with classical and quantum sieving algorithms, 
+following the methodology of \cite{newhope}. It is easy
+to see that the space requirement for classical sieving
+algorithms is far from practical. For example, it is estimated
+that the world's storage capacity is around 295 exabytes 
+$\approx 2^{68}$ bits \cite{storage1}; and the number of
+atoms in the whole earth is around $10^{49}\approx 2^{162}$ \cite{atom}. Thus we do not use BKZ with classical sieving
+to estimate the classical security of our parameters.
+Nonetheless, we do use BKZ with quantum sieving algorithms
+to estimate the quantum security, in accounting for 
+unknown affects on data storages with quantum computers.
+
+
+\begin{table}
+\centering\caption{Lattice strength following analysis of \cite{newhope}}\label{tbl:newhpe}
+\begin{tabular}{|c|cc|c|c|c|c|}\hline
+ $N$&  $m$ & $b$ & Known Classical & Known Quantum & Best Plausible  & Space Requirement\\\hline
+
+443 & 390 & 321 & 93 & 85 & 66 & $>2^{66}$\\
+743  & 613 & 603 & 176 & 159 & 125 & $>2^{125}$\\  
+1024 & 1870 & 747 & 218 & 198 & 155 & $>2^{155}$\\\hline 
+\end{tabular}
+
+\begin{tabular} {rl}
+m: & the number of used samples\\
+b: & block size for BKZ 2.0\\
+Known Classical: & 
+using the best known classical SVP solver \\
+%assuming a $2^{0.292n}$ cost for classical sieving as BKZ subroutine\\
+Known Quantum: & 
+using the best known quantum SVP solver \\
+%assuming a $2^{0.265n}$ cost for quantum sieving as BKZ subroutine\\
+Best Plausible: & 
+using a best plausible quantum SVP solver\\
+%assuming a $2^{0.2075n}$ cost for quantum sieving as BKZ subroutine\\
+Space Requirement: & requirement for all 3 sieving algorithms
+\end{tabular}
+
+\end{table}
+
+
+\subsubsection{Search attack}
+For \ntru~with trinary keys, since the secret keys are trinary polynomials with $df$ number of $1$s and $-1$s, the search space for the secret
+key is ${ N \choose {df, df}}/N$. For example, with parameter set \ntru-743, we have $2^{1158}$ candidates.
+(The factor $1/N$ comes from the fact that an attacker can guess any of $N$ cyclic rotations of
+the secret key, rather than just the secret key itself.)
+We remark that this key space for our parameter set is considerably larger than
+that in \cite{param15ctrsa} due to the switch from product form polynomials to
+flat form polynomials.
+This is sufficient even with the presence of meet-in-the-middle attacks \cite{probupper} and quantum
+attacks using Grover's algorithm \cite{Grover1996}.
+
+
+
+\subsubsection{Hybrid attack}
+The previous best known attack against \ntru, prior to the 
+BKZ with quantum sieving analysis \cite{newhope}, was the
+hybrid attack \cite{Nick07} which is a hybrid of a lattice attack and a meet-in-the-middle
+search attack. %Now BKZ with quantum sieving provides
+%a similar performance as the hybrid attacks.
+
+
+
+The rough idea is as follows.  One first chooses $N_1 < N$ and extracts a block, $\bfB_1$,
+of $2N_1\times2N_1$ coefficients from the center of the matrix $\bfB$. The rows of $\bfB_1$ are taken to generate a lattice $\Lcal_1$.
+\begin{eqnarray}
+\left(
+\begin{array}{c|c}
+q\bfI_{N} & 0  \\ \hline
+\bfH &  \bfI_{N}
+\end{array}
+\right)
+=
+\left(
+\begin{array}{c|c|c}
+q\bfI_{r_1} & 0 & 0 \\ \hline
+* & \bfB_1 & 0 \\ \hline
+* & * & \bfI_{r_2}
+\end{array}
+\right)
+\end{eqnarray}
+A lattice reduction algorithm is applied to find a unimodular transformation, $\bfU'$, such that $\bfU'\bfB_1$ is
+reduced, and an orthogonal transformation, $\bfY'$, is computed such that $\bfU'\bfB_1\bfY' =\bfT'$ is in lower triangular form.
+These transformations are applied to the original basis to produce a basis for an isomorphic lattice:
+\begin{eqnarray}
+\label{eq:T}
+\bfT = \bfU\bfB\bfY =
+\left(
+\begin{array}{c|c|c}
+\bfI_{r_1} & 0 & 0 \\ \hline
+0 & \bfU' & 0 \\ \hline
+0 & 0 & \bfI_{r_2}
+\end{array}
+\right)
+\left(
+\begin{array}{c|c|c}
+q\bfI_{r_1} & 0 & 0 \\ \hline
+* & \bfB_1 & 0 \\ \hline
+* & * & \bfI_{r_2}
+\end{array}
+\right)
+\left(
+\begin{array}{c|c|c}
+\bfI_{r_1} & 0 & 0 \\ \hline
+0 & \bfY' & 0 \\ \hline
+0 & 0 & \bfI_{r_2}
+\end{array}
+\right)
+=
+\left(
+\begin{array}{c|c|c}
+q\bfI_{r_1} & 0 & 0 \\ \hline
+* & \bfT' & 0 \\ \hline
+* & * & \bfI_{r_2}
+\end{array}
+\right).
+\end{eqnarray}
+Notice that $(\bfg, \bff)\bfY$ is a short vector in the resulting lattice.
+
+
+By a lemma of Furst and Kannan (Lemma $1$ in \cite{Nick07}), if $\bfy = \bfu\bfT + \bfx$
+for vectors $\bfu$ and $\bfx$ in $\ZZ^{2N}$, and $-\bfT_{i,i}/2 < \bfx_i \le \bfT_{i,i}/2$,
+then reducing $\bfy$ against $\bfT$ with Babai's nearest plane algorithm will yield
+$\bfx$ exactly. Thus if $\bfv$ is a shortest vector in $\Lcal$ and $\bfT$ is well reduced, it is guaranteed that $\bfv$ can be found by enumerating
+candidates for its final $K = 2N-r_2$ coefficients. 
+In the initial hybrid attack paper, 
+this enumerating 
+process  
+was done via meet-in-the-middle attacks. To accommodate the quantum
+attack models, we will use Grover's algorithm to analysis the cost
+of this enumeration.
+
+Now we are ready to present the cost of classical hybrid
+attacks and compare it with solving directly the uSVP. 
+
+
+\begin{table}%[H]
+\centering\caption{BKZ with classical enumeration, hybrid attack vs. uSVP}
+\begin{tabular}{|*{9}{c|}}\hline
+
+                                    &   \multicolumn{4}{c|}{Hybrid Attack Parameters}                                        & \multicolumn{2}{c|}{uSVP}  \\\cline{2-7}
+
+ \textsc{Param}            &   dim   & $\beta$    &  K      &   Cost               &    $\beta$ & cost  \\\hline\hline
+
+\ntru-443     &  620   &   241          &    161    &           $>128$ & 321& $>189$\\
+
+\ntru-743     &   890   &   413           &    338    &     $>267$       & 602 &$>443$   \\
+\ntru-1024     &   2047   &   953           &    140    &     $>811$     & 747 & $>590$  \\\hline
+\end{tabular}
+\end{table}
+
+\begin{table}%[H]
+\centering\caption{BKZ with quantum sieving, hybrid attack vs. uSVP}
+\begin{tabular}{|*{9}{c|}}\hline
+
+                                    &   \multicolumn{4}{c|}{Hybrid Attack Parameters}                                        & \multicolumn{2}{c|}{uSVP}  \\\cline{2-7}
+
+ \textsc{Param}            &   dim   & $\beta$    &  K      &   Cost               &    $\beta$ & cost  \\\hline\hline
+
+\ntru-443     &  411   &   317          &    105    &           $>84$ & 321& $>85$\\
+
+\ntru-743     &   645   &   616           &    205    &     $>163$       & 602 &$>159$   \\
+\ntru-1024     &   2047   &   1901          &    50    &     $>289$     & 747 & $>198$  \\\hline
+\end{tabular}
+\end{table}
+
+
+%\begin{tablenotes}
+
+
+
+%\end{tablenotes}
+%\end{threeparttable}
+
+%\begin{tabular} {|r||l|}
+%\hline
+%Primal: & find the unique shortest vector in NTRU lattice\\
+%Dual: & find the unique shortest vector in the dual lattice\\
+%m: & the number of used samples\\
+%b: & block size for BKZ 2.0\\
+%Known Classical: &
+%using the best known classical SVP solver \\
+%%assuming a $2^{0.292n}$ cost for classical sieving as BKZ subroutine\\
+%Known Quantum: &
+%using the best known quantum SVP solver \\
+%%assuming a $2^{0.265n}$ cost for quantum sieving as BKZ subroutine\\
+%Best Plausible: &
+%using a best plausible quantum SVP solver
+%%assuming a $2^{0.2075n}$ cost for quantum sieving as BKZ subroutine\\
+%\end{tabular}
+%\end{table}
+
+
+\subsubsection{Subfield attack}
+Subfield attacks against \ntru~have been considered in \cite{subfielddjb}.
+It was reported in \cite{DBLP:conf/crypto/AlbrechtBD16} that for certain ``over-stretched" NTRU parameters, one can exploit the subfield. This attack was only applicable to the NTRU lattices that are used
+to instantiate a (fully) homomorphic encryption scheme. The authors of
+ also \cite{DBLP:conf/crypto/AlbrechtBD16}
+showed that for our parameters the subfield attack will not be successful.
+
+
+%\subsection{Decryption failure rate}
+%**under construction**
 
 
 
 \subsection{Advantages and limitations}
 \paragraph{Most scrutinized lattice-based cryptosystem}
+\ntru~encryption algorithms was created in 1996, and survived over 20 years
+of cryptanalysis. 
+It's cryptographic desgin has been a fertile source of inspiration to other cryptographers with uses ranging from the notion of ideal lattices 
+\cite{DBLP:journals/cc/Micciancio07} to
+the constructions of some fully homomorphic encryption \cite{DBLP:conf/stoc/Gentry09,ltv13}.
+To date, we see many candidate quantum safe algorithms building upon NTRU or
+related ideas, such as NTRU-prime \cite{DBLP:journals/iacr/BernsteinCLV16} and
+NTRU-KEM \cite{DBLP:conf/ches/HulsingRSS17}. The NTRU trapdoor is still the most efficient way to design lattice based signature schemes.
 
 
-\paragraph{\ntru~trapdoor.}
-In general lattice based signature offers best performance among quantum-safe solutions, in terms of the combination of signature 
-sizes and public key sizes. However, the performance changes greatly 
-with how the trapdoor is the constructed. \ntru~trapdoor is in 
-general the most efficient one in the literature;  yet it survived
-20 years of cryptanalysis, which none other lattice based solution 
-has gone through.
+The \ntru~algorithm was standardized by IEEE 1363 \cite{ieee1363_1} in 2008 and ANSI X9.98 \cite{x998} in 2010. Both standards use the parameters from \cite{params08} in 2008. Those
+parameters have been stable for almost 10 years, despite of the rapid
+development of lattice cryptanalysis for the last decades, including
+BKZ 2.0 \cite{BKZ2}, BKZ 2.0 with sieving \cite{newhope}, subfield
+attacks \cite{subfielddjb,subfieldabd,subfieldcjl,subfieldkf} and more. 
+
+\paragraph{Small package sizes}
+\ntru~has the smallest public key and ciphertext sizes, compared to 
+other lattice based solutions, such as NewHope \cite{newhope} or Kyber \cite{DBLP:journals/iacr/BosDKLLSSS17}. This is particularly interesting 
+for handshake protocols, since in those protocols, it is crucial to fit
+the handshake payloads in a single Maximum Transmission Unit (MTU), or
+one would expect some package drops that may potentially slow down 
+the protocol and require additional protocol-level features (such as
+fragmentation management), or even
+fail the handshake. 
+
+The MTU is usually 1.5 kbytes. It allows for a maximum package payload of around 1 kbytes, with the rest reserved for hello messages. The \ntru~based solutions, 
+to the best of our knowledge, are the only ones that fit in this model.
+
+\paragraph{Lack of provable security} One question that was asked 
+frequently about \ntru~is its lack of provable security. To be precise,
+one can reduce the security of \ntru~encryptions to the unique shortest
+vector problem over an \ntru~lattice. The ``lack of security" here means
+that, unlike some LWE based schemes, where the uSVP problem is over a 
+generic lattice, and may be proven hard for certain parameters (which
+are often not the same parameters used to instantiate the actual scheme,
+see \cite{DBLP:conf/mycrypt/ChatterjeeKMS16} for example), 
+the uSVP problem for \ntru~lattices has no proof of hardness.
+
+We provide two arguments to address this concern. Firstly, in \cite{DBLP:conf/eurocrypt/StehleS11} it was shown that one can establish a reduction to 
+R-LWE problems for certain choices of parameters. Indeed, the \ssntrupke~algorithms in this submission follows this direction.
+
+On the other hand, in order to provide best performance,
+we also derive parameters for \ntrupke, based on the best known attacks with
+a comfortable margin. 
+To validate our understanding on cryptanalytic techniques, we published the \ntru~challenge. Only the first few challenges of tiny dimensions was 
+broken, as we expected, and the running time to break those challenges
+aligns with our expectation \cite{DBLP:conf/ctrsa/HoffsteinPSSWZ17}.
 
 
-
-\paragraph{Potential application for signature aggregation}. {\bf ZZ: shall we mention it at all?}
 \subsection{Performance and implementations}
 %\subsection{Performance Analysis}
+\paragraph{Benchmark}
+We present the benchmark result in Table \ref{tab:bench}.
+We tested our implementation with a dual core Intel i7-
+6600U processor @ 2.60GHz. Our operation system was
+Linux Ubuntu 16.04. We used gcc version 5.4.0.
+
+Here we focus on the average speed of our 
+PKE candidates: \ntrupke~and \ssntrupke~algorithms. Our KEM candidates are merely a 
+wrapper of PKE candidates; we omit the benchmark result 
+of those algorithms.
+\begin{table}
+\centering
+%\begin{threeparttable}
+\caption{Parameters}
+\label{tab:bench}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}\hline
+\textsc{Param} &Key Gen & Encryption & Decryption\\\hline\hline
+\ntru-443 & & & \\%\hline
+\ntru-743 & & &\\%\hline
+\ntru-1024 & & &\\\hline
+\end{tabular}
+\end{table}
+
 
 \paragraph{Optimizations not in this submission package.}
 There are two optimizations that we are aware of, that are not 
 included in this submission package. Namely
-\begin{itemize}
-\item AVX2 based optimization for polynomial multiplication \cite{ntrutoc}; this accelerates polynomial multiplication for $2.3$ times.
-\end{itemize}
+\begin{enumerate}
+\item A constant time, AVX2 based optimization for polynomial multiplication \cite{ntrutoc}; this accelerates polynomial multiplication for $2.3$ times.
+\item Product form polynomials \cite{DBLP:conf/ctrsa/HoffsteinPSSWZ17}; this increases 
+polynomial multiplications by around 3 times.
+\end{enumerate}
+We do not provide the first optimization, since it is prohibited
+by the submission. We also do not provide the second optimizations
+for conservative purpose. 
+
+\paragraph{Potential improvement not in this submission package.} 
+There are also three potential improvements that we are aware of, but
+are not included in this submission.
+\begin{enumerate}
+\item A better Gaussian sampler.
+\item Security argument against quantum random oracle.
+\item Efficient Number Theoretic Transform (NTT). 
+\end{enumerate}
+The first two items are active research area. We believe that we shall
+see many improvements from the PQC community and it is too early to fix
+on a single solution. We shall include those improvements once they are
+available, and when a minor revision is allowed. Nonetheless, we remark
+that our Box-Muller based Gaussian sampler is already quite efficient, 
+and has priorly been used in the literature, such as the HElib \cite{DBLP:conf/crypto/HaleviS14}. 
+
+We did not implement item 3 due to time constrains. Our naive
+ NTT algorithm takes roughly $O(N^2/2)$ operations where $N$ is the degree
+ of the polynomial. We are aware of Cooley-Tukey method which runs 
+in $O(N\log N)$ time, and improves signing speed upto 10 times in practice.
+We are willing to provide implementation during the revision phrase. 
 
 
 \subsection{Known Answer Test Values}
 
-
+Please see the {\em KAT} folder.
 
 
 \section{IPR Statement}
+Please see the {\em statement} folder.
 
 \bibliographystyle{plain}
 \bibliography{ntrumls}

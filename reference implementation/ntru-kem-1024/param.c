@@ -20,11 +20,11 @@ static PARAM_SET ParamSets[] = {
       2,                    /* message space prime */
       1073750017,           /* ring modulus, 2^30+2^13+1 */
       724,                  /* standard deviation,  */
-      128,                  /* maximum message length (in bytes) */
+      95,                  /* maximum message length (in bytes) */
     },
     {
       NTRU_CCA_1024,        /* parameter set id */
-      "NTRU_CCA_1024",      /* human readable name */
+      "NTRU_PKE_1024",      /* human readable name */
       {0xff, 0xff, 0xf9},   /* OID */
       11,                   /* bitlength of N */
       32,                   /* bitlength of q */

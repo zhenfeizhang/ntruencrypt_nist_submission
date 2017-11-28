@@ -21,9 +21,9 @@
 #define CRYPTO_SECRETKEYBYTES 1172  /* secret key length */
 #define CRYPTO_PUBLICKEYBYTES 1022  /* public key length */
 #define CRYPTO_CIPHERTEXTBYTES 1022
-#define CRYPTO_BYTES 32             /* padding ? */
+#define CRYPTO_BYTES 48             /* padding ? */
 #define CRYPTO_RANDOMBYTES 32       /* random input */
-#define CRYPTO_ALGNAME "NTRU_CCA_743"
+#define CRYPTO_ALGNAME "NTRU_PKE_743"
 
 /* ebacs API: key gen */
 int crypto_encrypt_keypair(
