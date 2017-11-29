@@ -15,7 +15,7 @@
 #define TEST_PARAM_SET  NTRU_CCA_1024
 #define CRYPTO_SECRETKEYBYTES 8194  /* secret key length */
 #define CRYPTO_PUBLICKEYBYTES 4097  /* public key length */
-#define CRYPTO_BYTES 32             /* padding  */
+#define CRYPTO_BYTES 48             /* padding  */
 #define CRYPTO_CIPHERTEXTBYTES 4097
 #define CRYPTO_RANDOMBYTES 32       /* random input */
 

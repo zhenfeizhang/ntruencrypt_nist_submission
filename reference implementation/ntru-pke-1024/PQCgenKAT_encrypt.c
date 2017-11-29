@@ -11,7 +11,7 @@
 #include <ctype.h>
 #include "../common/rng.h"
 #include "api.h"
-
+#include <time.h>
 #define	MAX_MARKER_LEN		50
 
 #define KAT_SUCCESS          0
@@ -38,7 +38,10 @@ main()
     unsigned char       pk[CRYPTO_PUBLICKEYBYTES], sk[CRYPTO_SECRETKEYBYTES];
     int                 ret_val;
     
-    
+    clock_t start, end;
+    clock_t total_keygen = 0;
+    clock_t total_enc = 0;
+    clock_t total_dec = 0;
     // Create the REQUEST file
     sprintf(fn_req, "PQCencryptKAT_%d.req", CRYPTO_SECRETKEYBYTES);
     if ( (fp_req = fopen(fn_req, "w")) == NULL ) {
@@ -81,23 +84,22 @@ main()
     fprintf(fp_rsp, "# %s\n\n", CRYPTO_ALGNAME);
     done = 0;
     do {
-            
         if ( FindMarker(fp_req, "count = ") )
-        {
             fscanf(fp_req, "%d", &count);
-        }
         else {
             done = 1;
             break;
         }
         fprintf(fp_rsp, "count = %d\n", count);
+        
         if ( !ReadHex(fp_req, seed, 48, "seed = ") ) {
             printf("ERROR: unable to read 'seed' from <%s>\n", fn_req);
             return KAT_DATA_ERROR;
         }
         fprintBstr(fp_rsp, "seed = ", seed, 48);
+        
         randombytes_init(seed, NULL, 256);
-
+        
         if ( FindMarker(fp_req, "mlen = ") )
             fscanf(fp_req, "%llu", &mlen);
         else {
@@ -106,9 +108,9 @@ main()
         }
         fprintf(fp_rsp, "mlen = %llu\n", mlen);
         
-        m = (unsigned char *)calloc(3300, sizeof(unsigned char));
-        m1 = (unsigned char *)calloc(3300+CRYPTO_CIPHERTEXTBYTES, sizeof(unsigned char));
-        c = (unsigned char *)calloc(3300+CRYPTO_CIPHERTEXTBYTES, sizeof(unsigned char));
+        m = (unsigned char *)calloc(mlen, sizeof(unsigned char));
+        m1 = (unsigned char *)calloc(mlen+CRYPTO_BYTES, sizeof(unsigned char));
+        c = (unsigned char *)calloc(mlen+CRYPTO_CIPHERTEXTBYTES, sizeof(unsigned char));
         
         if ( !ReadHex(fp_req, m, (int)mlen, "msg = ") ) {
             printf("ERROR: unable to read 'msg' from <%s>\n", fn_req);
@@ -116,29 +118,35 @@ main()
         }
         fprintBstr(fp_rsp, "msg = ", m, mlen);
         
-        
         // Generate the public/private keypair
+        start = clock();
         if ( (ret_val = crypto_encrypt_keypair(pk, sk)) != 0) {
             printf("crypto_encrypt_keypair returned <%d>\n", ret_val);
             return KAT_CRYPTO_FAILURE;
         }
+        end = clock();
+        total_keygen += (end-start);
         fprintBstr(fp_rsp, "pk = ", pk, CRYPTO_PUBLICKEYBYTES);
         fprintBstr(fp_rsp, "sk = ", sk, CRYPTO_SECRETKEYBYTES);
-
+        start = clock();
         if ( (ret_val = crypto_encrypt(c, &clen, m, mlen, pk)) != 0) {
             printf("crypto_encrypt returned <%d>\n", ret_val);
             return KAT_CRYPTO_FAILURE;
         }
+        end = clock();
+        total_enc += (end-start);
         fprintf(fp_rsp, "clen = %llu\n", clen);
         fprintBstr(fp_rsp, "c = ", c, clen);
         fprintf(fp_rsp, "\n");
-
-
+        start = clock();
         if ( (ret_val = crypto_encrypt_open(m1, &mlen1, c, clen, sk)) != 0) {
             printf("crypto_encrypt_open returned <%d>\n", ret_val);
             return KAT_CRYPTO_FAILURE;
         }
-
+        end = clock();
+        total_dec += (end-start);
+        
+        
         if ( mlen != mlen1 ) {
             printf("crypto_encrypt_open returned bad 'mlen': Got <%llu>, expected <%llu>\n", mlen1, mlen);
             return KAT_CRYPTO_FAILURE;
@@ -157,7 +165,11 @@ main()
     
     fclose(fp_req);
     fclose(fp_rsp);
-    printf("process finished\n");
+
+    printf("finished test: keygen %fs; enc %fs; dec %fs\n",
+            (double)total_keygen/CLOCKS_PER_SEC/75,
+            (double)total_enc/CLOCKS_PER_SEC/75,
+            (double)total_dec/CLOCKS_PER_SEC/75);
     return KAT_SUCCESS;
 }
 
@@ -186,6 +198,7 @@ FindMarker(FILE *infile, const char *marker)
 	      return 0;
 	  }
 	line[len] = '\0';
+
 	while ( 1 ) {
 		if ( !strncmp(line, marker, len) )
 			return 1;
@@ -198,7 +211,7 @@ FindMarker(FILE *infile, const char *marker)
 		    return 0;
 		line[len] = '\0';
 	}
- 
+
 	// shouldn't get here
 	return 0;
 }

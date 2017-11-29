@@ -11,7 +11,7 @@
 #include <ctype.h>
 #include "../common/rng.h"
 #include "api.h"
-
+#include <time.h>
 #define	MAX_MARKER_LEN		50
 #define KAT_SUCCESS          0
 #define KAT_FILE_OPEN_ERROR -1
@@ -35,6 +35,10 @@ main()
     unsigned char       pk[CRYPTO_PUBLICKEYBYTES], sk[CRYPTO_SECRETKEYBYTES];
     int                 ret_val;
     
+    clock_t start, end;
+    clock_t total_keygen = 0;
+    clock_t total_enc = 0;
+    clock_t total_dec = 0;
     // Create the REQUEST file
     sprintf(fn_req, "PQCkemKAT_%d.req", CRYPTO_SECRETKEYBYTES);
     if ( (fp_req = fopen(fn_req, "w")) == NULL ) {
@@ -88,31 +92,40 @@ main()
         randombytes_init(seed, NULL, 256);
         
         // Generate the public/private keypair
+        start = clock();
         if ( (ret_val = crypto_kem_keypair(pk, sk)) != 0) {
             printf("crypto_kem_keypair returned <%d>\n", ret_val);
             return KAT_CRYPTO_FAILURE;
         }
+        end = clock();
+        total_keygen += (end-start);
+        
         fprintBstr(fp_rsp, "pk = ", pk, CRYPTO_PUBLICKEYBYTES);
         fprintBstr(fp_rsp, "sk = ", sk, CRYPTO_SECRETKEYBYTES);
         
+        start = clock();
         if ( (ret_val = crypto_kem_enc(ct, ss, pk)) != 0) {
             printf("crypto_kem_enc returned <%d>\n", ret_val);
             return KAT_CRYPTO_FAILURE;
         }
+        end = clock();
+        total_enc += (end-start);
+        
         fprintBstr(fp_rsp, "ct = ", ct, CRYPTO_CIPHERTEXTBYTES);
         fprintBstr(fp_rsp, "ss = ", ss, CRYPTO_BYTES);
         
         fprintf(fp_rsp, "\n");
         
+        start = clock();
         if ( (ret_val = crypto_kem_dec(ss1, ct, sk)) != 0) {
             printf("crypto_kem_dec returned <%d>\n", ret_val);
             return KAT_CRYPTO_FAILURE;
         }
+        end = clock();
+        total_dec += (end-start);
         
         if ( memcmp(ss, ss1, CRYPTO_BYTES) ) {
             printf("crypto_kem_dec returned bad 'ss' value\n");
-            fprintBstr(fp_rsp, "ss = ", ss, CRYPTO_BYTES);
-            fprintBstr(fp_rsp, "ss1 = ", ss1, CRYPTO_BYTES);
             return KAT_CRYPTO_FAILURE;
         }
 
@@ -120,7 +133,10 @@ main()
     
     fclose(fp_req);
     fclose(fp_rsp);
-    printf("we are finished!\n");
+    printf("finished test: keygen %fs; enc %fs; dec %fs\n",
+            (double)total_keygen/CLOCKS_PER_SEC/100,
+            (double)total_enc/CLOCKS_PER_SEC/100,
+            (double)total_dec/CLOCKS_PER_SEC/100);
     return KAT_SUCCESS;
 }
 
