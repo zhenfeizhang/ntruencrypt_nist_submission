@@ -12,6 +12,7 @@
 #include "poly.h"
 
 
+/* generate a random binary polynomial */
 void
 binary_poly_gen(
           int64_t  *f,

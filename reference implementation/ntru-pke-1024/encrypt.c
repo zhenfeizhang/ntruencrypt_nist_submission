@@ -16,7 +16,7 @@
 
 
 
-/* ebacs API: key gen */
+/* key gen */
 int crypto_encrypt_keypair(
     unsigned char       *pk,
     unsigned char       *sk)
@@ -64,6 +64,7 @@ int crypto_encrypt(
     unsigned long long  mlen,
     const unsigned char *pk)
 {
+    /* load the parameters */
     PARAM_SET   *param;
     param   = get_param_set_by_id(pk[0]);
 
@@ -72,6 +73,8 @@ int crypto_encrypt(
         printf("unsupported parameter sets\n");
         return -1;
     }
+    
+    /* set up the memory */
 
     int64_t    *buf, *mem, *hntt, *cpoly;
     mem     = malloc(sizeof(int64_t)*param->N*2);
@@ -89,10 +92,15 @@ int crypto_encrypt(
     memset(mem,0, sizeof(int64_t)*param->N*2);
     memset(buf,0, sizeof(int64_t)*param->N*7 + LENGTH_OF_HASH*2);
 
+
+    /* unpack the public key */
     unpack_ring_element(pk, param, hntt);
 
+    /* encryption */
     encrypt_cca(cpoly, (char*) m, mlen, hntt, buf, param);
 
+
+    /* pack cpoly into a ciphertext string */
     pack_ring_element (c, param, cpoly);
 
     *clen = param->N*sizeof(int32_t)/sizeof(unsigned char)+1;
@@ -115,6 +123,7 @@ int crypto_encrypt_open(
     unsigned long long  clen,
     const unsigned char *sk)
 {
+    /* load the parameters */
     PARAM_SET   *param;
 
     param   =   get_param_set_by_id(c[0]);
@@ -124,6 +133,7 @@ int crypto_encrypt_open(
         return -1;
     }
 
+    /* set up the memory */
     int64_t    *buf, *mem, *f, *cpoly, *mpoly, *hntt;
     mem     = malloc(sizeof(int64_t)*param->N*4);
     buf     = malloc(sizeof(int64_t)*param->N*7 + LENGTH_OF_HASH*2);
@@ -142,12 +152,14 @@ int crypto_encrypt_open(
     memset(mem,0, sizeof(int64_t)*param->N*4);
     memset(buf,0, sizeof(int64_t)*param->N*7 + LENGTH_OF_HASH*2);
 
+    /* unpack the keys */
     unpack_ring_element (c, param, cpoly);
 
     unpack_ring_element (sk, param, f);
 
     unpack_ring_element (sk+param->N*sizeof(int32_t)/sizeof(unsigned char)+1, param, hntt);
 
+    /* decryption */
     *mlen = decrypt_cca((char*) m, f, hntt, cpoly, buf, param);
 
 

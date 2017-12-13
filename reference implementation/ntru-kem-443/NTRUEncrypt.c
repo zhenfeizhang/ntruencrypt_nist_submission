@@ -65,6 +65,7 @@ keygen(
 
 /*
  * memory requirement: 5 ring elements
+ * checking if h = g/f 
  */
 int check_keys(
     const uint16_t  *F,
@@ -99,6 +100,7 @@ int check_keys(
     return 0;
 }
 
+/* check if message is a valid trinary poly for kem */
 int
 check_m (
     const uint16_t *m,
@@ -153,6 +155,10 @@ int encrypt_kem(
     return 0;
 }
 
+/* 
+ * lift the message back to a trinary polynomial 
+ * by mod q then mod p 
+ */
 static void
 lift_msg(
     uint16_t    *m,

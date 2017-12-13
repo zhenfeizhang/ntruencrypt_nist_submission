@@ -57,6 +57,7 @@ int crypto_kem_keypair(
 }
 
 
+/* encapsulation function */
 int crypto_kem_enc(
     unsigned char *ct,
     unsigned char *ss,
@@ -115,7 +116,7 @@ int crypto_kem_enc(
     return 0;
 }
 
-
+/* decapsulation function */
 int crypto_kem_dec(
     unsigned char *ss,
     const unsigned char *ct,

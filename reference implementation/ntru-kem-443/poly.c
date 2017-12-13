@@ -158,11 +158,8 @@ ntru_ring_mult_coefficients(
 
     memset(tmp, 0, 3*param->padN*sizeof(uint16_t));
 
-//    todo: debug toom4
-//    if (N == 443)
-        karatsuba(tmp, tmp+param->padN*2, a, b, param->N);
-//    else if (N==743)
-//        karatsuba_toom4(tmp, tmp+2*PAD(N), a, b, PAD(N));
+    karatsuba(tmp, tmp+param->padN*2, a, b, param->N);
+
     for(i=0; i<param->N; i++)
     {
         c[i] = (tmp[i] + tmp[i+param->N]) & q_mask;

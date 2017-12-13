@@ -26,7 +26,7 @@ OBJS += \
   param.o \
   ../common/rng.o \
   poly.o \
-  DSG.o \
+  DGS.o \
   ntt.o \
   norms.o \
   ../common/crypto_hash_sha512.o \
@@ -41,7 +41,7 @@ C_DEPS += \
   packing.d \
   param.d \
   ../common/rng.d \
-  DSG.d \
+  DGS.d \
   ntt.d \
   poly.d \
   norms.d \

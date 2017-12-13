@@ -24,7 +24,7 @@
 
 
 
-/* ebacs API: key gen */
+/* key gen */
 int crypto_encrypt_keypair(
     unsigned char       *pk,
     unsigned char       *sk)
@@ -61,7 +61,7 @@ int crypto_encrypt_keypair(
     return 0;
 }
 
-/* ebacs API: encryption */
+/* encryption */
 int crypto_encrypt(
     unsigned char       *c,
     unsigned long long  *clen,
@@ -69,42 +69,54 @@ int crypto_encrypt(
     unsigned long long  mlen,
     const unsigned char *pk)
 {
+
+    /* load the parameters */
     PARAM_SET   *param;
     uint16_t    *buf, *mem, *h, *cpoly;
     param   = get_param_set_by_id(pk[0]);
 
     *clen   = (unsigned long long ) param->packpk;
 
-    if (param->id==NTRU_CCA_443 || param->id == NTRU_CCA_743)
-    {
-        mem     = malloc(sizeof(uint16_t)*param->padN*2);
-        buf     = malloc(sizeof(uint16_t)*param->padN*6);
-        memset(mem,0, sizeof(uint16_t)*param->padN*2);
-        memset(buf,0, sizeof(uint16_t)*param->padN*6);
-        h       = mem;
-        cpoly   = h     + param->padN;
-
-        unpack_public_key(pk,param, h);
-
-        encrypt_cca(cpoly, (char*) m, mlen, h,  buf, param);
-
-        pack_public_key (c, param, cpoly);
-
-        memset(mem,0, sizeof(uint16_t)*param->padN*2);
-        memset(buf,0, sizeof(uint16_t)*param->padN*6);
-        free(mem);
-        free(buf);
-    }
-    else
+    if (param->id!=NTRU_CCA_443 && param->id != NTRU_CCA_743)
     {
         printf("unsupported parameter sets\n");
         return -1;
     }
+    
+    /* set up the memory */
+    mem     = malloc(sizeof(uint16_t)*param->padN*2);
+    buf     = malloc(sizeof(uint16_t)*param->padN*6);
+        
+    if(!mem || !buf)
+    {
+        printf("malloc error\n");
+        return -1;
+    }
+    
+    memset(mem,0, sizeof(uint16_t)*param->padN*2);
+    memset(buf,0, sizeof(uint16_t)*param->padN*6);
+    h       = mem;
+    cpoly   = h     + param->padN;
+
+    /* unpack the public key */
+    unpack_public_key(pk,param, h);
+
+
+    /* encryption */
+    encrypt_cca(cpoly, (char*) m, mlen, h,  buf, param);
+
+    /* pack cpoly into a ciphertext string */
+    pack_public_key (c, param, cpoly);
+
+    memset(mem,0, sizeof(uint16_t)*param->padN*2);
+    memset(buf,0, sizeof(uint16_t)*param->padN*6);
+    free(mem);
+    free(buf);
 
     return 0;
 }
 
-/* ebacs API: decryption */
+/* decryption */
 int crypto_encrypt_open(
     unsigned char       *m,
     unsigned long long  *mlen,
@@ -112,6 +124,7 @@ int crypto_encrypt_open(
     unsigned long long  clen,
     const unsigned char *sk)
 {
+    /* load the parameters */
     PARAM_SET   *param;
     param   =   get_param_set_by_id(c[0]);
 
@@ -121,6 +134,7 @@ int crypto_encrypt_open(
         return -1;
     }
 
+    /* set up the memory */
     uint16_t    *buf, *mem, *F, *cpoly, *h;
     mem     = malloc(sizeof(uint16_t)*param->padN*4);
     buf     = malloc(sizeof(uint16_t)*param->padN*8);
@@ -138,10 +152,13 @@ int crypto_encrypt_open(
     memset(mem,0, sizeof(uint16_t)*param->padN*4);
     memset(buf,0, sizeof(uint16_t)*param->padN*8);
 
+
+    /* unpack the keys */
     unpack_public_key (c, param, cpoly);
 
     unpack_secret_key_CCA (sk, param, F, h);
 
+    /* decryption */
     *mlen = decrypt_cca((char*) m,  F, h, cpoly,  buf, param);
 
     free(mem);

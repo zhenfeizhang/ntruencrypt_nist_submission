@@ -18,10 +18,10 @@
 
 
 #define TEST_PARAM_SET  NTRU_KEM_743
-#define CRYPTO_SECRETKEYBYTES 1172   /* secret key length */
-#define CRYPTO_PUBLICKEYBYTES 1022  /* public key length */
+#define CRYPTO_SECRETKEYBYTES 1173   /* secret key length */
+#define CRYPTO_PUBLICKEYBYTES 1023  /* public key length */
 #define CRYPTO_BYTES 48             /* shared secret length */
-#define CRYPTO_CIPHERTEXTBYTES 1022
+#define CRYPTO_CIPHERTEXTBYTES 1023
 #define CRYPTO_RANDOMBYTES 32       /* random input */
 #define CRYPTO_ALGNAME "NTRU_KEM_743"
 

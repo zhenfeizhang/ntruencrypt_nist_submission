@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 #include "param.h"
+
+/* convert a ring element into a char str */
 void
 pack_ring_element(
     unsigned char   *str,
@@ -24,6 +26,8 @@ pack_ring_element(
     }
 }
 
+
+/* convert a char str into a ring element */
 void
 unpack_ring_element(
     const unsigned char

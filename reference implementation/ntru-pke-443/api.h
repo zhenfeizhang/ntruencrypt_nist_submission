@@ -17,9 +17,9 @@
 #define API_H_
 
 #define TEST_PARAM_SET  NTRU_CCA_443
-#define CRYPTO_SECRETKEYBYTES 700   /* secret key length */
-#define CRYPTO_PUBLICKEYBYTES 610   /* public key length */
-#define CRYPTO_CIPHERTEXTBYTES 610
+#define CRYPTO_SECRETKEYBYTES 701   /* secret key length */
+#define CRYPTO_PUBLICKEYBYTES 611   /* public key length */
+#define CRYPTO_CIPHERTEXTBYTES 611
 #define CRYPTO_BYTES 32             /* padding ? */
 #define CRYPTO_RANDOMBYTES 32       /* random input */
 #define CRYPTO_ALGNAME "NTRU_PKE_443"

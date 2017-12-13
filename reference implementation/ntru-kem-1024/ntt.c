@@ -13,7 +13,7 @@
 #include "ntt.h"
 #include "param.h"
 
-
+/* return a mod q within the interval 0 and q */
 int64_t modq(
           int64_t     a,
           int64_t     q)
@@ -25,6 +25,7 @@ int64_t modq(
         return b;
 }
 
+/* lift an NTT polynomial into integers */
 void INTT(
           int64_t     *f,
     const int64_t     *f_ntt,
@@ -53,6 +54,7 @@ void INTT(
 
 }
 
+/* converting a polynomial f into its NTT form */
 
 void NTT(
     const int64_t     *f,
@@ -87,6 +89,57 @@ void NTT(
     }
 }
 
+/* xgcd algorithm */
+static int64_t
+zz_gcd(
+    const int64_t a,
+    const int64_t b,
+    int64_t       *u_ptr,
+    int64_t       *v_ptr)
+{
+  int64_t d = a;
+  int64_t u = 1;
+  int64_t v = 0;
+  int64_t v1, v3, t1, t3;
+  if(b != 0) {
+    v1 = 0;
+    v3 = b;
+    do {
+      t1 = d / v3;
+      t3 = d % v3;
+      t1 = u - (t1*v1);
+
+      u = v1;
+      d = v3;
+      v1 = t1;
+      v3 = t3;
+    } while(v3 != 0);
+    v = (d - a*u)/b;
+  }
+  if(u_ptr != NULL) *u_ptr = u;
+  if(v_ptr != NULL) *v_ptr = v;
+  return d;
+}
+
+/* compute a^-1 mod n */
+int64_t
+InvMod(
+    int64_t       a,
+    const int64_t p)
+{
+  int64_t r;
+  int64_t t = ((int64_t)(a > 0) - (int64_t)(a < 0));
+  a *= t;
+
+  if(zz_gcd(a,p,&r,NULL) == 1)
+  {
+    r *= t;
+    return (r > 0) ? r : p + r;
+  }
+  return 0;
+}
+
+/* xgcd algorithm */
 int64_t* extendedEuclid (int64_t a, int64_t b)
 {
     int64_t array[3];
@@ -100,29 +153,12 @@ int64_t* extendedEuclid (int64_t a, int64_t b)
     else{
         int64_t t, t2;
         dxy = extendedEuclid(b, (a %b));
-        t =dxy[1];
-        t2 =dxy[2];
+        t   = dxy[1];
+        t2  = dxy[2];
         dxy[1] =dxy[2];
         dxy[2] = t - a/b *t2;
 
         return dxy;
     }
 }
-
-int64_t InvMod(int64_t a, int64_t n)
-{
-   int64_t *ptr;
-
-   ptr = extendedEuclid (a,n);
-   if (ptr[0]!=1 && ptr[0]!=-1)
-       printf("error\n");
-
-   if (ptr[0] == -1)
-       ptr[1] = -ptr[1];
-   if (ptr[1] < 0)
-      return ptr[1] + n;
-   else
-      return ptr[1];
-}
-
 

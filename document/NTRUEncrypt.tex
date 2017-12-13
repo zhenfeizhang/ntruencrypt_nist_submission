@@ -851,10 +851,10 @@ The details of the above estimations shall be presented in the next subsection.
 &\multicolumn{2}{|c|}{\ntru-1024}
 \\\hline
 \textsc{Scheme}& \ntrupke &\ntrukem &\ntrupke &\ntrukem&\ssntrupke &\ssntrukem \\\hline
-CRYPTO\_SECRETKEYBYTES & \multicolumn{2}{|c|}{700} &\multicolumn{2}{|c|}{1172}&\multicolumn{2}{|c|}{8194} \\
-CRYPTO\_PUBLICKEYBYTES & \multicolumn{2}{|c|}{610} &\multicolumn{2}{|c|}{1022}&\multicolumn{2}{|c|}{4097}\\
+CRYPTO\_SECRETKEYBYTES & \multicolumn{2}{|c|}{701} &\multicolumn{2}{|c|}{1173}&\multicolumn{2}{|c|}{8194} \\
+CRYPTO\_PUBLICKEYBYTES & \multicolumn{2}{|c|}{611} &\multicolumn{2}{|c|}{1023}&\multicolumn{2}{|c|}{4097}\\
 CRYPTO\_BYTES &\multicolumn{2}{|c|}{32}&\multicolumn{2}{|c|}{48} &\multicolumn{2}{|c|}{48}\\
-CRYPTO\_CIPHERTEXTBYTES &\multicolumn{2}{|c|}{610}&\multicolumn{2}{|c|}{1022}&\multicolumn{2}{|c|}{4097}\\\hline
+CRYPTO\_CIPHERTEXTBYTES &\multicolumn{2}{|c|}{611}&\multicolumn{2}{|c|}{1023}&\multicolumn{2}{|c|}{4097}\\\hline
 \end{tabular}
 \end{table}
 We address NIST's required security levels as follows:
@@ -1196,6 +1196,55 @@ showed that for our parameters the subfield attack will not be successful.
 %\subsection{Decryption failure rate}
 %**under construction**
 
+\subsection{Decryption error rates}
+We summarize the result in Table \ref{tab:error}.
+
+\begin{table}\centering
+\caption{Decryption error rate}\label{tab:error}
+\begin{tabular}{|c|c|c|c|}\hline
+ \ntru-443 & \ntru-743 & \ntru-1024\\\hline
+ $<2^{-196}$ & $<2^{-112}$ & $<2^{-80}$\\\hline
+\end{tabular}
+\end{table}
+
+We note that for all three parameter sets, it is safe
+to assume that no decryption errors will be observed,
+assuming the maximum number of key exchange or encryption
+that one will perform is bounded by $2^{64}$ as suggested
+by NIST.
+
+
+For detailed analysis of decryption rate of \ntru-443 and
+\ntru-743, see \cite{DBLP:conf/ctrsa/HoffsteinPSSWZ17}.
+For \ntru-1024, we give the following analysis.
+
+
+Recall that in decryption one computes
+$$\bfm' = \bff * \bfc = p \cdot \bfr * \bfg +  p\cdot
+\bfe *\bff + \bfm'*\bff \bmod q.$$
+A decrypt error will occur if $\|p \cdot \bfr * \bfg +  p\cdot
+\bfe *\bff + \bfm'*\bff\|_\infty >q/2$ which will 
+cause a wraparound. It is sufficient to focus on the first two terms since $\bfm'$ is a lot smaller than $p\cdot\bfr*\bfg$ or $p\cdot\bfe*\bff$. Hence we need to compute the
+probability that 
+$$\|\bfr*\bfg + \bfe*\bff\|_\infty > q/(2p) $$
+Two simplify the analysis, we know that $\bfr$, $\bfg$, $\bfe$, $\bff$ are all sampled from Gaussian with $\sigma$, therefore each coefficient of ($\bfr*\bfg + \bfe*\bff$)
+is a sum of $2N$ products of two Gaussian integers.
+The distribution of product of two Gaussian integers with a 
+same deviations $\sigma$  is a 
+normal product distribution
+$$
+D(z) = \frac{K_0(\frac{z}{\sigma^2})}{\pi\sigma^2}
+$$
+where $$K_0(z) = \int_0^\infty \frac{\cos{(zt)}}{t^2+1}dt$$
+This allows us to estimate that 
+$$\text{Prob}[x>q/(4Np)] \lessapprox 2^{-102}$$
+for a single integer with normal product form distribution.
+Since each coefficient of ($\bfr*\bfg + \bfe*\bff$) is
+a sum of $2N$ samples from $ D(z)$, require the above 
+event happens for the all the $2N$ samples for each coefficients, therefore we estimate that the 
+decryption error rate will be
+$$1-(1-2^{-102})^{(2N)^2} \approx 2^{-80}$$
+
 
 
 \subsection{Advantages and limitations}
@@ -1257,21 +1306,25 @@ We present the benchmark results in Table \ref{tab:bench}.
 We tested our implementation with a dual core Intel i7-
 6600U processor @ 2.60GHz. Our operation system was
 Linux Ubuntu 16.04. We used gcc version 5.4.0.
-
-Here we focus on the average speed of our 
-PKE candidates: \ntrupke~and \ssntrupke~algorithms. Our KEM candidates are merely a 
-wrapper of PKE candidates; we omit the benchmark results 
-of those algorithms.
+The benchmark result is shown in Table \ref{tab:bench}.
+%Here we focus on the average speed of our 
+%PKE candidates: \ntrupke~and \ssntrupke~algorithms. Our KEM candidates are merely a 
+%wrapper of PKE candidates; we omit the benchmark results 
+%of those algorithms.
 \begin{table}
 \centering
 %\begin{threeparttable}
-\caption{Parameters}
+\caption{Benchmark results}
 \label{tab:bench}
 \begin{tabular}{|c|c|c|c|c|c|c|c|}\hline
 \textsc{Param} &Key Gen & Encryption & Decryption\\\hline\hline
-\ntru-443 & & & \\%\hline
-\ntru-743 & & &\\%\hline
-\ntru-1024 & & &\\\hline
+\ntrukem-443 & 440 $\mu s$ & 82 $\mu s$ &109 $\mu s$  \\%\hline
+\ntrupke-443 & 472 $\mu s$ & 84 $\mu s$ &109 $\mu s$  \\
+\hline
+\ntrukem-743 & 1017 $\mu s$& 140 $\mu s$&210 $\mu s$\\%\hline
+\ntrupke-743 & 990 $\mu s$& 121 $\mu s$& 195 $\mu s$\\\hline
+\ntrukem-1024 &43.5 $ms$ & 67 $ms$ &115 $ms$\\
+\ntrupke-1024 &43.2 $ms$ & 67 $ms$ &115 $ms$\\\hline
 \end{tabular}
 \end{table}
 
