@@ -28,7 +28,7 @@
 
 void DGS (      int64_t   *v,       /* output   vector */
           const uint16_t  dim,      /* input    dimension */
-          const uint8_t   stdev)    /* input    standard deviation */
+          const uint64_t   stdev)   /* input    standard deviation */
 {
     uint16_t d2 = dim/2;
     uint16_t i;
