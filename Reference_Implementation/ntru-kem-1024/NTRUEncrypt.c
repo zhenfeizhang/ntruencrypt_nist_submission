@@ -274,8 +274,8 @@ mask_m(
     /* extract the last bit of rh */
     for (i=0;i<LENGTH_OF_HASH*2;i++)
     {
-        seed[i] = (rh[i*8] & 1);
-        for (j=1;j<8;j++);
+        seed[i] = (rh[i*8] & 1);        
+        for (j=1;j<8;j++)
         {
             seed[i] <<= 1;
             seed[i] += (rh[i*8+j] & 1);
@@ -283,7 +283,8 @@ mask_m(
     }
 
     /* first 512 coefficients */
-    crypto_hash_sha512(seed, (unsigned char*)rh, param->N*8);
+    crypto_hash_sha512(seed, seed, LENGTH_OF_HASH*2);
+
     for (i=0;i<LENGTH_OF_HASH;i++)
     {
         tmp = seed[i];
@@ -332,7 +333,7 @@ encrypt_cca(
     rntt = r    + param->N;
     m    = rntt + param->N;
     c    = m    + param->N;
-    hashbuf = m + param->N;
+    hashbuf = c + param->N;
 
     memset (buf, 0, sizeof(int64_t)*param->N*7 + LENGTH_OF_HASH*2);
 
@@ -350,7 +351,7 @@ encrypt_cca(
     INTT(c,cntt, param);
 
     /* mask = hash(c);  m = m \xor mask */
-    mask_m(c, m, hashbuf, param);
+    mask_m(m, c, hashbuf, param);
 
     /* e <-- DGS; e = 2e + m */
     DGS(e,param->N,param->stddev);
@@ -443,7 +444,7 @@ int decrypt_cca(
     INTT(c,cntt, param);
     for (i=0;i<param->N;i++)
         c[i] = c[i] - m[i];
-    mask_m(c, m, hashbuf, param);
+    mask_m(m, c, hashbuf, param);
 
     generate_r(r, m, hntt, hashbuf, param);
 
