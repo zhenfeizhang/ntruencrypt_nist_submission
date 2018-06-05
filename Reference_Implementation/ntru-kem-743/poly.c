@@ -414,6 +414,8 @@ binary_poly_gen(
 }
 
 
+
+
 /* generate a trinary polynomial with fixed number of +/- 1s */
 void
 trinary_poly_gen(
@@ -426,20 +428,23 @@ trinary_poly_gen(
 
     memset(f, 0, sizeof(uint16_t)*N);
     count = 0;
-    while(count < d+1)
+    while(count < d)
     {
         rng_uint64(&r);
         for (i =0;i<6;i++)
         {
-            coeff[i] = r & 0x3FF;
-            r = (r - coeff[i])>>10;
-            if (coeff[i]<N)
+            if (count<d)
             {
-                if (f[coeff[i]]==0)
-                {
-                    f[coeff[i]]=1;
-                    count++;
-                }
+              coeff[i] = r & 0x3FF;
+              r = (r - coeff[i])>>10;
+              if (coeff[i]<N)
+              {
+                  if (f[coeff[i]]==0)
+                  {
+                      f[coeff[i]]=1;
+                      count++;
+                  }
+              }
             }
         }
     }
@@ -449,15 +454,18 @@ trinary_poly_gen(
         rng_uint64(&r);
         for (i =0;i<6;i++)
         {
-            coeff[i] = r & 0x3FF;
-            r = (r - coeff[i])>>10;
-            if (coeff[i]<N)
+            if (count<d)
             {
-                if (f[coeff[i]]==0)
-                {
-                    f[coeff[i]]=-1;
-                    count++;
-                }
+              coeff[i] = r & 0x3FF;
+              r = (r - coeff[i])>>10;
+              if (coeff[i]<N)
+              {
+                  if (f[coeff[i]]==0)
+                  {
+                      f[coeff[i]]=-1;
+                      count++;
+                  }
+              }
             }
         }
     }
